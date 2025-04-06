@@ -1,7 +1,20 @@
-# Tauri + SvelteKit + TypeScript
+# Tauri + SvelteKit + TypeScript + Deno
 
-This template should help get you started developing with Tauri, SvelteKit and TypeScript in Vite.
+Run:
+```
+deno install
+deno task tauri dev
+```
+to run the tauri app.
 
-## Recommended IDE Setup
+Run 
+```
+deno install
+deno task dev
+```
+to run the dev server to run on browser
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).
+## Philosophy
+
+Mainly SvelteKit, just using Tauri as a test for desktop building
+

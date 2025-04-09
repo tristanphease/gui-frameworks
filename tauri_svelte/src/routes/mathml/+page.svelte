@@ -1,27 +1,43 @@
 
 <script lang="ts">
-    let y = 0;
-    window.addEventListener("scroll", (e) => {
-        console.log(e);
-    });
+    import { scrollBehaviour } from "$lib/scroll.svelte.js";
+    
+    let boxColour = $state("#ff0000");
+    
+    function transformFunction(value: number) {
+        const r = Math.floor(value * 255);
+        const g = Math.floor((1 - value) * 255);
+        const b = 0;
+        const a = 1 - 2 * Math.abs(value - 0.5);
 
-    let height = 100000;
-    window.onload = () => {
-        const dummyElem = document.getElementById("dummy");
-        console.log(dummyElem);
-        if (dummyElem) {
-            dummyElem.style.height = `${height}px`;
-            console.log(`set height - ${dummyElem.style.height}`);
-        }
+        boxColour = colourString(r, g, b, a);
     }
-    
-    
+
+    function colourString(r: number, g: number, b: number, a = 255): string {
+        return `rgb(${r}, ${g}, ${b}, ${a})`;
+    }
 
 </script>
 
-<svelte:window bind:scrollY={y} />
 <main class="container">
-    <div id="dummy" style="visibility: hidden;"></div>
-    HELLO
+
+    <div id="background">
+        <div id="box" style:background-color={boxColour} use:scrollBehaviour={[ transformFunction, 30000 ]}>
+
+        </div>
+    </div>
+    
 </main>
+
+<style>
+    #box {
+        width: 100vw;
+        height: 100vh;
+    }
+
+    #background {
+        background-color: #181818;
+    }
+
+</style>
 

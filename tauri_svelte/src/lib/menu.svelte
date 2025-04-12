@@ -77,6 +77,7 @@
     position: absolute;
     left: 10px;
     top: 10px;
+    z-index: 1;
 }
 
 .rotate-anim-forward {

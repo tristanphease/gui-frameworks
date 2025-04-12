@@ -13,7 +13,7 @@
         boxColour = colourString(r, g, b, a);
     }
 
-    function colourString(r: number, g: number, b: number, a = 255): string {
+    function colourString(r: number, g: number, b: number, a = 1): string {
         return `rgb(${r}, ${g}, ${b}, ${a})`;
     }
 
@@ -23,7 +23,7 @@
 
     <div id="background">
         <div id="box" style:background-color={boxColour} use:scrollBehaviour={[ transformFunction, 30000 ]}>
-
+            
         </div>
     </div>
     

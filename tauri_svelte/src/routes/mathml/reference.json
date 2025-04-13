@@ -1,0 +1,60 @@
+{
+    "values": [
+        {
+            "name": "Math",
+            "summary": "Base math element",
+            "element": "math",
+            "description": "This element is required to wrap all math related elements. It's called math instead of maths because it's designed by americans.",
+            "example": "<math>3<mo>+</mo>4<mo>=</mo>7</math>"
+        },
+        {
+            "name": "Row",
+            "summary": "Mathematical row",
+            "element": "mrow",
+            "description": "A way to group mathematical elements in a row for semantic reasons.",
+            "example": "<math><mfrac><mrow>2&times;4</mrow><mrow>4&times;0.5</mrow></mfrac><mo>=</mo>4</math>"
+        },
+        {
+            "name": "Operators",
+            "summary": "Normal mathematical operators",
+            "element": "mo",
+            "description": "What counts as an operator is quite complicated, but can be used for lots of operators with many options.",
+            "example": "<math>18<mo>-</mo>6<mo>=</mo>12</math>"
+        },
+        {
+            "name": "Exponents",
+            "summary": "Square numbers",
+            "element": "msup",
+            "description": "This uses a superscript element to represent exponents",
+            "example": "<math><msup><mn>13</mn><mn>2</mn></msup><mo>=</mo>169</math>"
+        },
+        {
+            "name": "Number",
+            "summary": "Numerical values",
+            "element": "mn",
+            "description": "For representing numeric literals",
+            "example": "<math><mn>2.718281828459045</mn></math>"
+        },
+        {
+            "name": "Fraction",
+            "summary": "Fractional numbers",
+            "element": "mfrac",
+            "description": "For representing fractions, when a number can be represented as a ratio of numbers",
+            "example": "<math><mfrac><mn>3</mn><mn>5</mn></mfrac></math>"
+        },
+        {
+            "name": "Square root",
+            "summary": "Square root of a number",
+            "element": "msqrt",
+            "description": "For representing a square root which is the inverse of the square operation",
+            "example": "<math><msqrt><mn>64</mn></msqrt><mo>=</mo>8</math>"
+        },
+        {
+            "name": "Arbitrary root",
+            "summary": "Root/radical for any number, e.g. cube root",
+            "element": "mroot",
+            "description": "For representing an arbitrary root which is the inverse of the exponent operation",
+            "example": "<math><mroot><mn>216</mn><mn>3</mn></mroot><mo>=</mo><mn>6</mn></math>"
+        }
+    ]
+}

@@ -1,0 +1,72 @@
+{
+    "values": [
+        {
+            "name": "Multiplication symbol",
+            "symbol": "&times;"
+        },
+        {
+            "name": "Division symbol",
+            "symbol": "&div;"
+        },
+        {
+            "name": "Plus or minus symbol",
+            "symbol": "&PlusMinus;"
+        },
+        {
+            "name": "Less than symbol",
+            "symbol": "&lt;"
+        },
+        {
+            "name": "Greater than symbol",
+            "symbol": "&gt;"
+        },
+        {
+            "name": "Less than or equal symbol",
+            "symbol": "&leq;"
+        },
+        {
+            "name": "Greater than or equal symbol",
+            "symbol": "&geq;"
+        },
+        {
+            "name": "Not equal symbol",
+            "symbol": "&NotEqual;"
+        },
+        {
+            "name": "Integral symbol",
+            "symbol": "&Integral;"
+        },
+        {
+            "name": "Summation symbol (sigma)",
+            "symbol": "&Sum;"
+        },
+        {
+            "name": "Product symbol (pi)",
+            "symbol": "&Product;"
+        },
+        {
+            "name": "Prime numbers symbol",
+            "symbol": "&primes;"
+        },
+        {
+            "name": "Rational numbers symbol",
+            "symbol": "&rationals;"
+        },
+        {
+            "name": "Real numbers symbol",
+            "symbol": "&reals;"
+        },
+        {
+            "name": "Integer numbers symbol",
+            "symbol": "&integers;"
+        },
+        {
+            "name": "Imaginary number symbol",
+            "symbol": "&ii;"
+        },
+        {
+            "name": "Infinity symbol",
+            "symbol": "&infin;"
+        }
+    ]
+}

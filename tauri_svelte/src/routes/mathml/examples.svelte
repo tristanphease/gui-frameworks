@@ -6,7 +6,7 @@
 
 <div>
     <h3>
-        Some cool things you can do with MathML
+        Some cool things you can do with MathML that might be impossible or difficult to do cleanly with other methods.
     </h3>
     
     <InputExample />

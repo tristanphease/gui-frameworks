@@ -1,12 +1,13 @@
 <script lang="ts">
   import { T } from '@threlte/core';
+  import { OrbitControls } from "@threlte/extras";
 
 </script>
 
 <T.PerspectiveCamera
   makeDefault
-  position={[2, -10, -0.5]}
-  rotation={[1.48353, 0, 0.038397]}
-  fov={39.6}
+  position={[0, 0, 1000]}
+  rotation={[0, 0, 0]}
+  fov={50}
 >
 </T.PerspectiveCamera>

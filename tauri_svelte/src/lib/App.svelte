@@ -2,22 +2,15 @@
     import { Canvas } from "@threlte/core";
     import Scene from "./Scene.svelte";
 
-    let scrollY = $state(0);
-
-    function onScroll() {
-        scrollY = Math.max(window.scrollY, 0);
-    }
 
 </script>
 
-<svelte:window
-  on:scroll={onScroll}
-/>
+
 
 <div>
     <div id="canvasWrapper">
         <Canvas>
-            <Scene scrollY={scrollY} />
+            <Scene />
         </Canvas>
     </div>
     <div id="dummy">
@@ -34,7 +27,11 @@
     #canvasWrapper {
         position: sticky;
         top: 0;
-        width: 90vw;
-        height: 90vh;
+        width: 100vw;
+        height: 100vh;
+    }
+
+    :global(body) {
+        margin: 0;
     }
 </style>

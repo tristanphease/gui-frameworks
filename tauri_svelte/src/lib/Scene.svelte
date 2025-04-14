@@ -1,65 +1,96 @@
 <script lang="ts">
-  import { T } from '@threlte/core';
-  import { GLTF } from '@threlte/extras';
-  import { useGltfAnimations } from './useGltfAnimations.js';
-  import ScrollCamera from './scrollCamera.svelte';
-  import { Text } from '@threlte/extras';
+    import { T } from "@threlte/core";
+    import ScrollCamera from "./scrollCamera.svelte";
+    import { Text3DGeometry } from "@threlte/extras";
+    import Page from "../routes/+page.svelte";
 
-  const ANIMATION_NAME = "MainAnim";
-  const SCROLL_ANIM_AMOUNT = 0.005;
+    let scrollY = $state(0);
 
-  const { scrollY } = $props(); 
+    const CHARS = "0123456789+-π=";
 
-  const TEXT_LINES = [
-    "Hello!",
-    "This is testing a scroll effect",
-    "using Svelte + Threlte!",
-    "",
-    "It's a bit scuffed",
-    "but it kinda works",
-    "If I were to redo this, I would",
-    "pick a more appropriate thing",
-    "to use"
-  ];
-  
+    const OBJECT_NUM = 30;
 
-  let animationTime = $state(0);
-  let showText = $derived(scrollY * SCROLL_ANIM_AMOUNT >= animationTime);
+    type Position = [number, number, number];
+    interface TextObject {
+        position: Position,
+        character: string,
+    }
 
-  const {gltf, actions, mixer} = useGltfAnimations<typeof ANIMATION_NAME>();
+    interface TextObjectInfo {
+        initialPos: Position,
+        gradient: number,
+        character: string,
+    }
 
-  $effect(() => {
-    $actions[ANIMATION_NAME]?.play();
-    animationTime = $actions[ANIMATION_NAME]?.getClip()?.duration ?? 0;
-  });
-  
-  $effect(() => {
-    mixer.setTime(Math.min(scrollY * SCROLL_ANIM_AMOUNT, animationTime - 0.01));
-  });
+    let charObjectInfos: TextObjectInfo[] = $state([]);
+    let charObjects: TextObject[] = $derived(calcCharObjectFromInfo(charObjectInfos, scrollY));
+
+    function calcCharObjectFromInfo(charObjectInfos: TextObjectInfo[], scrollY: number): TextObject[] {
+        return charObjectInfos.map(x => {
+
+            let width = document.documentElement.clientWidth;
+            let height = document.documentElement.clientHeight;
+
+            let newPosition: Position = [add(x.initialPos[0], scrollY, width, x.gradient), add(x.initialPos[1], scrollY, height, 1 - x.gradient), x.initialPos[2]];
+            
+            return {
+                position: newPosition,
+                character: x.character,
+            };
+
+            function add(pos: number, scroll: number, max: number, gradient: number): number {
+                return (pos + scroll * gradient + max/2) % max - max/2;
+            }
+        });
+    }
+
+    function addObject() {
+        const randomChar = CHARS[Math.floor(Math.random() * CHARS.length)];
+
+        let width = document.documentElement.clientWidth;
+        let height = document.documentElement.clientHeight;
+
+        // simple triangle distribution between -value to value
+        const initialPos: Position = [randBias(width), randBias(height), 200 * (Math.random() - 0.5)];
+
+        charObjectInfos.push({
+            initialPos,
+            gradient: Math.random() * 2 - 1,
+            character: randomChar
+        });
+    }
+
+    // bias the numbers towards the centre
+    function randBias(value: number) {
+        const random = Math.random();
+        const sign = Math.random() < 0.5 ? 1 : -1;
+        const randomSquared = (1 - random * random) * sign;
+        return randomSquared * value;
+    }
+
+    // initial setup
+    for (let i = 0; i < OBJECT_NUM; i++) {
+        addObject();
+    }
 
 </script>
 
-<ScrollCamera />
-
-<T.DirectionalLight
-  intensity={0.6}
-  position={[2, -10, -0.5]}
-  castShadow
-  shadow.bias={-0.0001}
+<svelte:window
+  bind:scrollY={scrollY}
 />
 
-<GLTF url="/page.glb"  bind:gltf={$gltf} />
+<ScrollCamera />
 
-{#if showText}
-  {#each TEXT_LINES as text, i}
-  {@const scale = i === 0 ? 1 : 0.5}
-  {@const distZ = -0.22 - i * 0.07 - (i > 0 ? 0.07 : 0)}
-    <Text 
-      position={[1.4, -7.0, distZ]} 
-      rotation={[1.57, 0, 0]} 
-      scale={scale}
-      color={"black"}
-      text={text} /> 
-  {/each}
-  
-{/if}
+<T.AmbientLight 
+    intensity={2.0}
+/>
+
+
+{#each charObjects as charObject}
+    <T.Mesh
+        position={charObject.position}
+    >
+        <Text3DGeometry text={charObject.character} />
+        <T.MeshStandardMaterial color="black" emissive="white" />
+    </T.Mesh>
+{/each}

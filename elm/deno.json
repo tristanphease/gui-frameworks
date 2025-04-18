@@ -1,0 +1,10 @@
+{
+    "tasks": {
+        "dev": {
+            "command": "deno run -A npm:elm-watch@beta hot"
+        },
+        "build": {
+            "command": "elm make src/Main.elm --output=build/main.js"
+        }
+    }
+}

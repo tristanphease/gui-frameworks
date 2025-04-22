@@ -1,4 +1,22 @@
 
+/* for variables */
+:root {
+    --main-color: rgb(0, 36, 70);
+    --bg-color: rgb(0, 102, 197);
+    --highlight-color: rgb(0, 4, 54);
+    --main-text-color: rgb(255, 255, 255);
+    
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+* {
+    color: var(--main-text-color);
+}
+
+body {
+    background-color: var(--bg-color);
+}
+
 .error-message {
     color: rgb(255, 123, 123);
 }
@@ -12,5 +30,52 @@
 }
 
 .quote-author {
-    
+
+}
+
+.main-body {
+    background-color: var(--main-color);
+    margin-top: 20px;
+    padding: 30px;
+}
+
+
+.header {
+    background-color: var(--main-color);
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.header-link {
+    padding: 10px;
+}
+
+.flex-row {
+    display: flex;
+    flex-direction: row;
+}
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-main-center {
+    justify-content: center;
+}
+
+.flex-sub-center {
+    align-items: center;
+}
+
+.font-size-30 {
+    font-size: 30px;
+}
+
+.highlight {
+    background-color: var(--highlight-color);
+}
+
+.gap-10 {
+    gap: 10px;
 }

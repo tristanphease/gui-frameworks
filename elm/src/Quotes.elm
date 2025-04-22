@@ -14,6 +14,8 @@ apiUrl : String
 apiUrl = "https://en.wikiquote.org/w/api.php"
 
 -- MAIN
+-- this main is just so this page works when using elm.reactor
+-- otherwise not needed
 
 main : Program () Model Msg
 main = 

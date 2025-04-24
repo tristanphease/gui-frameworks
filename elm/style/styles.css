@@ -1,8 +1,10 @@
 
 /* for variables */
 :root {
-    --main-color: rgb(0, 36, 70);
+    --main-color: rgb(0, 36, 70, 0.9);
+    --secondary-color: rgb(0, 17, 32);
     --bg-color: rgb(0, 102, 197);
+    --bg-secondary-color: rgb(0, 102, 197);
     --highlight-color: rgb(0, 4, 54);
     --main-text-color: rgb(255, 255, 255);
     
@@ -13,8 +15,13 @@
     color: var(--main-text-color);
 }
 
-body {
-    background-color: var(--bg-color);
+html {
+    background-image: repeating-conic-gradient(
+        from 45deg at 50% -10%,
+        var(--bg-color) 0deg 5deg,
+        var(--secondary-color) 5deg 10deg
+    );
+    min-height: 100vh;
 }
 
 .error-message {
@@ -33,6 +40,12 @@ body {
 
 }
 
+input, button, textarea {
+    background-color: var(--secondary-color);
+    border: 2px solid white;
+}
+
+
 .main-body {
     background-color: var(--main-color);
     margin-top: 20px;
@@ -44,6 +57,9 @@ body {
     background-color: var(--main-color);
     padding-top: 10px;
     padding-bottom: 10px;
+
+    border-top: 5px ;
+    
 }
 
 .header-link {

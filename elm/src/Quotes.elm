@@ -1,13 +1,17 @@
 module Quotes exposing (..)
 
 import Http
-import Json.Decode exposing (Decoder, map, map3, field, string, int)
-import Html exposing (a, div, text, Html, button)
+import Json.Decode exposing (Decoder, map3, field, string, int)
+import Html exposing (..)
 import Html.Events exposing (onClick)
 import Result exposing (Result)
 import Browser
 import Html.Parser exposing (..)
-import Time exposing (Posix)
+import Time exposing (..)
+import Html.Attributes exposing (..)
+import Task exposing (Task)
+import Util.Months exposing (..)
+import Util.Date exposing (..)
 
 -- base url for wikiquote actions
 apiUrl : String
@@ -33,12 +37,30 @@ type QuoteError
   = LoadingError
   | ParsingError String
 
-type Model 
-  = LoadedQuote Quote
-  | LoadingQuote
+type QuoteLoading 
+  = LoadedQOTD Date Quote
+  | LoadingQOTD Date
+  | ErrorLoadingQOTD Date QuoteError
+  | GettingDate
   | NoQuote
-  | ErrorLoadingQuote QuoteError
 
+
+type DateType 
+  = ValidDate Date 
+  | InvalidDate Date
+  | NoDate
+
+type alias Model =
+  {
+    savedQuotes: List Quote,
+    date: DateType,
+    -- can only load one quote at a time
+    currentQOTDLoading : QuoteLoading
+  }
+
+type QuoteOrigin
+  = QuoteOfTheDay Date
+  
 type alias Quote =
   {
     quote : String,
@@ -47,8 +69,27 @@ type alias Quote =
 
 -- INIT
 
-init : () -> ( Model, Cmd msg)
-init _ = ( NoQuote, Cmd.none )
+init : () -> ( Model, Cmd Msg)
+init _ = 
+  ( 
+    {
+      savedQuotes = [],
+      date = NoDate,
+      currentQOTDLoading = NoQuote
+    },
+    Task.perform SetCurrentDate getDate
+  )
+
+getDate : Task x Date
+getDate =
+  Task.map2 getDateFromTime Time.now Time.here 
+
+getDateFromTime : Time.Posix -> Time.Zone -> Date 
+getDateFromTime time zone =
+  Date
+    ( Time.toYear zone time )
+    ( Time.toMonth zone time )
+    ( Time.toDay zone time )
 
 type alias PageObject = 
   {
@@ -62,17 +103,28 @@ type alias MainOuterObject =
     parse: PageObject
   }
 
-loadQuoteOfTheDayPage : Cmd Msg
-loadQuoteOfTheDayPage = 
+loadQuoteOfTheDayPage : Date -> Cmd Msg
+loadQuoteOfTheDayPage date = 
   Http.get 
     {
-      url = apiUrl ++ "?action=parse&page=Wikiquote%3AQuote_of_the_day%2FApril_2025&prop=text&origin=*&formatversion=2&format=json",
-      expect = Http.expectJson PageReceived parseMainDecoder
+      url = getApiUrl date,
+      expect = Http.expectJson ( PageReceived date ) parseMainDecoder
     } 
+
+getApiUrl : Date -> String 
+getApiUrl date =
+  apiUrl 
+    ++ "?action=parse&page=Wikiquote%3AQuote_of_the_day%2F" 
+    ++ (toMonthString date.month) 
+    ++ "_"
+    ++ (String.fromInt date.day) 
+    ++ ",_"
+    ++ (String.fromInt date.year)
+    ++ "&prop=text&origin=*&formatversion=2&format=json"
 
 parseMainDecoder : Decoder MainOuterObject
 parseMainDecoder =
-  map MainOuterObject 
+  Json.Decode.map MainOuterObject 
     (field "parse" parsePageDecoder)
 
 parsePageDecoder : Decoder PageObject
@@ -91,10 +143,9 @@ parseQuoteOfTheDay pageString =
       let firstNode = (getFirst nodes)
       in case firstNode of 
         Just node ->
-          let quoteValue = findQuoteFromNode (Time.millisToPosix 0) node
+          let quoteValue = findQuoteFromNode node
           in case quoteValue of 
             FoundQuote quote -> Ok quote 
-            LookingForDate -> Err ( "Stuck looking for the right date" )
             LookingForTable -> Err ( "Stuck looking for the table" )
             LookingForSubTable -> Err ( "Stuck looking for the sub table" )
             LookingForTds -> Err ( "Stuck looking for the tds in the table" )
@@ -125,23 +176,20 @@ compareForFirst a1 a2 =
     Nothing -> Just a1
 
 type ParseQuoteState
-  = LookingForDate
-  | LookingForTable
+  = LookingForTable
   | LookingForSubTable
   | LookingForTds
   | LookingForAuthor String
   | FoundQuote Quote
 
-findQuoteFromNode : Time.Posix -> Node -> ParseQuoteState
-findQuoteFromNode time node =
-  findQuoteFromNodeInternal time node LookingForDate
+findQuoteFromNode : Node -> ParseQuoteState
+findQuoteFromNode node =
+  findQuoteFromNodeInternal node LookingForTable
 
 -- get the state from the element
 stateFromElement : Node -> String -> ParseQuoteState -> ParseQuoteState
 stateFromElement node elementName currentState 
   = case currentState of 
-    -- if looking for date, use current state children first
-    LookingForDate -> currentState
     LookingForTable -> if checkTable elementName then LookingForSubTable else LookingForTable
     LookingForSubTable -> if checkTable elementName then LookingForTds else LookingForSubTable
     LookingForTds -> 
@@ -158,15 +206,12 @@ stateFromElement node elementName currentState
 
 
 
-findQuoteFromNodeInternal : Time.Posix -> Node -> ParseQuoteState -> ParseQuoteState
-findQuoteFromNodeInternal time node state =
+findQuoteFromNodeInternal : Node -> ParseQuoteState -> ParseQuoteState
+findQuoteFromNodeInternal node state =
   case node of 
-    Text text -> 
-      case state of 
-        LookingForDate -> if checkDateText time text then LookingForTable else LookingForDate
-        _ -> state 
+    Text _ -> state
     Element elementName _ childrenNodes ->
-      List.foldl (findQuoteFromNodeInternal time) (stateFromElement node elementName state) childrenNodes
+      List.foldl findQuoteFromNodeInternal (stateFromElement node elementName state) childrenNodes
     Comment _ -> state
 
 -- just retrieves the text from a node and sub nodes recursively
@@ -181,16 +226,6 @@ getTextFromNode node =
 checkTable : String -> Bool
 checkTable elementName =
   elementName == "table"
-
--- find the date
-checkDateText : Time.Posix -> String -> Bool
-checkDateText time text =
-  text == "April 1"
-
--- findTableFollowingDate : Time.Posix -> Maybe Node -> Node -> Maybe Node
--- findTableFollowingDate time currentTable node =
---   case node of 
---     Text text -> if text == "April 1"
     
 
 
@@ -203,21 +238,40 @@ getTableFromElement elementName node currentTable =
 -- UPDATE
 
 type Msg 
-  = PageReceived (Result Http.Error MainOuterObject)
-  | FetchQuote
+  = PageReceived Date (Result Http.Error MainOuterObject)
+  | FetchQuote Date
+  | SetCurrentDate Date
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
-    PageReceived (Ok outerPage) -> 
+    PageReceived date (Ok outerPage) -> 
       case parseQuoteOfTheDay outerPage.parse.text of
-        Ok ( parsedQuote ) -> ( LoadedQuote parsedQuote, Cmd.none )
-        Err ( error ) -> ( ErrorLoadingQuote (ParsingError error), Cmd.none )
-    PageReceived (Err _) ->
-      ( ErrorLoadingQuote LoadingError, Cmd.none )
-    FetchQuote ->
-      ( LoadingQuote, loadQuoteOfTheDayPage)
-
+        Ok ( parsedQuote ) -> 
+          ( 
+            { model | currentQOTDLoading = LoadedQOTD date parsedQuote },
+            Cmd.none
+          )
+        Err ( error ) -> 
+          ( 
+            { model | currentQOTDLoading = ErrorLoadingQOTD date (ParsingError error) }
+            , Cmd.none 
+          )
+    PageReceived date (Err _) ->
+      ( 
+        { model | currentQOTDLoading = ErrorLoadingQOTD date LoadingError }, 
+        Cmd.none
+      )
+    FetchQuote date ->
+      ( 
+        { model | currentQOTDLoading = LoadingQOTD date }, 
+        loadQuoteOfTheDayPage date
+      )
+    SetCurrentDate date ->
+      ( 
+        { model | date = if checkValidDate date then ValidDate date else InvalidDate date }, 
+        Cmd.none 
+      )
 
 -- VIEW
 
@@ -225,22 +279,81 @@ view : Model -> Html Msg
 view model =
   div []
     [
-      text "hi",
-      button [ onClick FetchQuote ] [ text "button" ],
+      h1 [] [ text "Get and save quotes" ],
+      viewRetrieveQuote model,
+      viewCurrentQuote model
+    ]
+
+viewRetrieveQuote : Model -> Html Msg 
+viewRetrieveQuote model =
+  div [ class "flex-row", class "gap-10" ] 
+    [
+      viewCalendar model.date,
+      viewGetQuote model
+    ]
+
+viewGetQuote : Model -> Html Msg
+viewGetQuote model =
+  case model.date of 
+    ValidDate date -> button [ onClick ( FetchQuote date ) ] [ text getQuoteButtonText ]
+    InvalidDate _ -> button [ disabled True ] [ text getQuoteButtonText ]
+    NoDate -> button [ disabled True ] [ text getQuoteButtonText ]
+
+getQuoteButtonText : String 
+getQuoteButtonText = "Get Quote of the Day"
+
+viewCurrentQuote : Model -> Html Msg 
+viewCurrentQuote model =
+  div [ class "flex-column", class "gap-10" ] 
+    [
       viewQuote model
     ]
 
 viewQuote : Model -> Html Msg 
 viewQuote model =
-  case model of 
-    LoadedQuote quote ->
-      div [] [text "quote: ", text quote.quote, text quote.author ]
-    LoadingQuote ->
-      div [] [text "loading"]
+  
+  case model.currentQOTDLoading of 
+    LoadedQOTD date quote ->
+      div [ class "flex-column", class "gap-10" ]
+        [
+          text ( "Loaded quote of the day for " ++ dateToReadableString date ++ ":" ),
+          textarea [ disabled True, rows 5, cols 10 ] 
+            [
+              text quote.quote
+            ],
+          text quote.author,
+          button [] [ text "Save quote" ] 
+        ]
+    LoadingQOTD _ -> viewLoading
+    GettingDate -> viewLoading
     NoQuote ->
       div [] [text "get quote?"]
-    ErrorLoadingQuote quoteError -> 
-      div [] [ text (getErrorText quoteError) ]
+    ErrorLoadingQOTD date quoteError -> 
+      div [] [ text ("Couldn't load quote: " ++ getErrorText quoteError) ]
+viewLoading : Html Msg
+viewLoading =
+  div [] [text "Loading Quote"]
+
+viewCalendar : DateType -> Html Msg
+viewCalendar dateType =
+  div []
+    [
+      (
+        case dateType of 
+          ValidDate date -> dateInput date
+          InvalidDate invalidDate -> text "invalid date"
+          NoDate -> text "don't have date loaded"
+      )
+    ]
+
+dateInput : Date -> Html Msg 
+dateInput date =
+  span []
+    [
+      input [ type_ "date", value ( dateToString date ) ] []
+    ]
+
+
 
 getErrorText : QuoteError -> String
 getErrorText quoteError = 

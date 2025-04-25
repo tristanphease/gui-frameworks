@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Browser exposing (Document, UrlRequest)
+import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -9,10 +9,11 @@ import Url
 import Quotes
 import Platform.Cmd as Cmd
 import NotFound
+import Util.Ports
 
 -- MAIN
 
-main : Program () Model Msg 
+main : Program (Maybe String) Model Msg 
 main =
   Browser.application 
     {
@@ -32,7 +33,8 @@ type alias Model =
     route : Route,
     page : Page,
     key : Nav.Key,
-    url : Url.Url
+    url : Url.Url,
+    savedState : Maybe String
   }
 
 type Page
@@ -46,10 +48,10 @@ isQuotePage page =
     QuotesPage _ -> True
     _ -> False
 
-init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ url navKey =
+init : (Maybe String) -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init savedState url navKey =
   (
-    Model (Routes.parseUrl url) MainPage navKey url,
+    Model (Routes.parseUrl url) MainPage navKey url savedState,
     Cmd.none
   )
     |> loadCurrentPage
@@ -66,7 +68,7 @@ loadCurrentPage ( model, existingCmds ) =
         Routes.Quote ->
           let 
             (pageModel, pageCmds) =
-              Quotes.init ()
+              Quotes.init model.savedState
           in 
             (QuotesPage pageModel, Cmd.map QuotesMsg pageCmds)
   in (
@@ -81,6 +83,7 @@ type Msg
   | UrlChanged Url.Url
   | QuotesMsg Quotes.Msg
   | NotFoundMsg NotFound.Msg
+  | ReceiveStoredDate ( Maybe String )
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -115,7 +118,11 @@ update msg model =
         _ -> (model, Cmd.none)
     NotFoundMsg _ ->
       (model, Cmd.none)
-          
+    ReceiveStoredDate storedData ->
+      (
+        { model | savedState = storedData },
+        Cmd.none
+      )
 
 -- VIEW
 
@@ -152,7 +159,8 @@ viewMain : Html Msg
 viewMain = 
   div []
     [
-      text "This is the main page. Click the buttons at the top to navigate around!"
+      p [] [ text "This is the main page. Click the buttons at the top to navigate around!" ],
+      p [] [ text "I don't really know what else to put on this main page." ]
     ]
 
 viewBody : Page -> Html Msg 
@@ -174,4 +182,4 @@ viewBody page =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+  Util.Ports.getStoredQuotes ReceiveStoredDate

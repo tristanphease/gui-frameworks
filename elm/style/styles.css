@@ -24,20 +24,44 @@ html {
     min-height: 100vh;
 }
 
-.error-message {
-    color: rgb(255, 123, 123);
-}
-
-.click-button {
-
+.error {
+    background-color: rgb(255, 123, 123);
 }
 
 .quote-text {
+    background-color: var(--secondary-color);
+    border: 5px solid black;
+    margin: 10px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    padding: 2px;
+    transform: skew(var(--skew-amount), var(--skew-amount));
+}
 
+.quote-wrapper:nth-child(even) {
+    --skew-amount: -1deg;
+    --author-float: right;
+    --button-float: left;
+    --button-left: 20px;
+    --button-top: 0px;
+    --author-translate: translate(-20px, -30px);
+}
+.quote-wrapper:nth-child(odd) {
+    --skew-amount: 1deg;
+    --author-float: left;
+    --button-float: right;
+    --button-left: -20px;
+    --button-top: 0px;
+    --author-translate: translate(20px, -30px);
 }
 
 .quote-author {
-
+    background-color: var(--secondary-color);
+    border: 5px solid black;
+    transform: skew(var(--skew-amount), var(--skew-amount)) var(--author-translate);
+    display: block;
+    padding: 2px;
+    float: var(--author-float);
 }
 
 input, button, textarea {
@@ -45,6 +69,13 @@ input, button, textarea {
     border: 2px solid white;
 }
 
+.delete-quote-button {
+    position: relative;
+    left: var(--button-left);
+    top: var(--button-top);
+    font-size: 20px;
+    float: var(--button-float);
+}
 
 .main-body {
     background-color: var(--main-color);

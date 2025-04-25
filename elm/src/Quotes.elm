@@ -2,8 +2,9 @@ module Quotes exposing (..)
 
 import Http
 import Json.Decode exposing (Decoder, map3, field, string, int)
+import Json.Encode
 import Html exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput)
 import Result exposing (Result)
 import Browser
 import Html.Parser exposing (..)
@@ -12,6 +13,7 @@ import Html.Attributes exposing (..)
 import Task exposing (Task)
 import Util.Months exposing (..)
 import Util.Date exposing (..)
+import Util.Ports
 
 -- base url for wikiquote actions
 apiUrl : String
@@ -21,7 +23,7 @@ apiUrl = "https://en.wikiquote.org/w/api.php"
 -- this main is just so this page works when using elm.reactor
 -- otherwise not needed
 
-main : Program () Model Msg
+main : Program (Maybe String) Model Msg
 main = 
   Browser.element 
     {
@@ -69,11 +71,15 @@ type alias Quote =
 
 -- INIT
 
-init : () -> ( Model, Cmd Msg)
-init _ = 
-  ( 
+init : Maybe String -> ( Model, Cmd Msg)
+init flags = 
+  (
     {
-      savedQuotes = [],
+      savedQuotes = 
+        case flags of 
+          Just quotesJson ->
+            decodeQuotes quotesJson
+          Nothing -> [],
       date = NoDate,
       currentQOTDLoading = NoQuote
     },
@@ -193,18 +199,36 @@ stateFromElement node elementName currentState
     LookingForTable -> if checkTable elementName then LookingForSubTable else LookingForTable
     LookingForSubTable -> if checkTable elementName then LookingForTds else LookingForSubTable
     LookingForTds -> 
-      if elementName == "td" && String.length (getTextFromNode node) > 0 then
+      if elementName == "td" && String.length (String.trim (getTextFromNode node)) > 0 then
         LookingForAuthor (getTextFromNode node)
       else 
         LookingForTds
     LookingForAuthor quoteString -> 
-      if elementName == "td" && String.length (getTextFromNode node) > 0 then
-        FoundQuote (Quote quoteString (getTextFromNode node))
+      if elementName == "td" && String.length (String.trim (getTextFromNode node)) > 0 then
+        FoundQuote (Quote quoteString (trimAuthor (getTextFromNode node)))
       else 
         currentState
     FoundQuote _ -> currentState
 
+trimAuthor : String -> String
+trimAuthor authorText =
+  authorText
+    |> trimAuthorLeft
+    |> trimAuthorRight
 
+trimAuthorLeft : String -> String
+trimAuthorLeft authorText =
+  if String.startsWith "~ " authorText then 
+    String.dropLeft 2 authorText
+  else 
+    authorText
+
+trimAuthorRight : String -> String
+trimAuthorRight authorText =
+  if String.endsWith " ~\n" authorText then 
+    String.dropRight 3 authorText
+  else 
+    authorText
 
 findQuoteFromNodeInternal : Node -> ParseQuoteState -> ParseQuoteState
 findQuoteFromNodeInternal node state =
@@ -235,12 +259,47 @@ getTableFromElement elementName node currentTable =
   if elementName == "table" then Just node else currentTable  
 
 
+-- SAVED QUOTES 
+
+saveQuotes : List Quote -> Cmd Msg
+saveQuotes quotes =
+  Json.Encode.list quoteEncoder quotes 
+    |> Json.Encode.encode 0
+    |> Util.Ports.storeQuotes 
+
+quoteEncoder : Quote -> Json.Encode.Value
+quoteEncoder quote =
+  Json.Encode.object 
+    [
+      ( "quote", Json.Encode.string quote.quote ),
+      ( "author", Json.Encode.string quote.author )
+    ]
+
+decodeQuotes : String -> List Quote 
+decodeQuotes quoteJson =
+  let
+    quoteResult 
+      = Json.Decode.decodeString (Json.Decode.list quoteDecoder) quoteJson
+  in
+    case quoteResult of 
+      Ok quotes -> quotes 
+      Err error -> []
+
+quoteDecoder : Json.Decode.Decoder Quote
+quoteDecoder =
+  Json.Decode.map2 Quote
+    (field "quote" Json.Decode.string)
+    (field "author" Json.Decode.string)
+
+
 -- UPDATE
 
 type Msg 
   = PageReceived Date (Result Http.Error MainOuterObject)
   | FetchQuote Date
   | SetCurrentDate Date
+  | SaveQuote Quote
+  | RemoveSavedQuote Quote
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -272,6 +331,23 @@ update msg model =
         { model | date = if checkValidDate date then ValidDate date else InvalidDate date }, 
         Cmd.none 
       )
+    SaveQuote quote ->
+      let 
+        newSavedQuotes 
+          = ( quote :: model.savedQuotes )
+      in (
+        { model | savedQuotes = newSavedQuotes },
+        saveQuotes newSavedQuotes
+      )
+    RemoveSavedQuote quote ->
+      let
+          newSavedQuotes
+            = List.filter (\x -> x /= quote) model.savedQuotes 
+      in
+      (
+        { model | savedQuotes = newSavedQuotes }, 
+        saveQuotes newSavedQuotes
+      )
 
 -- VIEW
 
@@ -281,7 +357,8 @@ view model =
     [
       h1 [] [ text "Get and save quotes" ],
       viewRetrieveQuote model,
-      viewCurrentQuote model
+      viewCurrentQuote model,
+      viewSavedQuotes model
     ]
 
 viewRetrieveQuote : Model -> Html Msg 
@@ -311,7 +388,6 @@ viewCurrentQuote model =
 
 viewQuote : Model -> Html Msg 
 viewQuote model =
-  
   case model.currentQOTDLoading of 
     LoadedQOTD date quote ->
       div [ class "flex-column", class "gap-10" ]
@@ -322,14 +398,15 @@ viewQuote model =
               text quote.quote
             ],
           text quote.author,
-          button [] [ text "Save quote" ] 
+          button [ onClick ( SaveQuote quote ) ] [ text "Save quote" ] 
         ]
     LoadingQOTD _ -> viewLoading
     GettingDate -> viewLoading
     NoQuote ->
-      div [] [text "get quote?"]
+      div [] [text "No quote loaded"]
     ErrorLoadingQOTD date quoteError -> 
-      div [] [ text ("Couldn't load quote: " ++ getErrorText quoteError) ]
+      div [] [ text ("Couldn't load quote of the day for " ++ (dateToReadableString date) ++ ": " ++ getErrorText quoteError) ]
+
 viewLoading : Html Msg
 viewLoading =
   div [] [text "Loading Quote"]
@@ -340,23 +417,51 @@ viewCalendar dateType =
     [
       (
         case dateType of 
-          ValidDate date -> dateInput date
-          InvalidDate invalidDate -> text "invalid date"
-          NoDate -> text "don't have date loaded"
+          ValidDate date -> dateInput date True
+          InvalidDate invalidDate -> dateInput invalidDate False
+          NoDate -> text "Don't have date loaded"
       )
     ]
 
-dateInput : Date -> Html Msg 
-dateInput date =
-  span []
+dateInput : Date -> Bool -> Html Msg 
+dateInput date validDate =
+  span [ ]
     [
-      input [ type_ "date", value ( dateToString date ) ] []
+      input 
+        [ 
+          type_ "date", 
+          value ( dateToString date ), 
+          onInput ( dateInputValue ),
+          classList [ ("error", not validDate) ]
+        ] 
+        []
     ]
 
-
+dateInputValue : String -> Msg
+dateInputValue dateString =
+  stringToDate dateString
+    |> SetCurrentDate
 
 getErrorText : QuoteError -> String
 getErrorText quoteError = 
   case quoteError of 
-    LoadingError -> "Couldn't load from wikiquote"
-    ParsingError errorString -> "Couldn't parse: "++ errorString 
+    LoadingError -> "Couldn't load from wikiquote, perhaps there's no QOTD for this day?"
+    ParsingError errorString -> "Couldn't parse: " ++ errorString 
+
+viewSavedQuotes : Model -> Html Msg 
+viewSavedQuotes model =
+  div [ class "flex-column" ] 
+    (List.map viewSavedQuote model.savedQuotes)
+
+viewSavedQuote : Quote -> Html Msg 
+viewSavedQuote quote =
+  div [ class "quote-wrapper" ]
+    [
+      viewQuoteButtons quote,
+      div [ class "quote-text" ] [ text quote.quote ],
+      span [ class "quote-author" ] [  text ("- " ++ quote.author) ]
+    ]
+
+viewQuoteButtons : Quote -> Html Msg
+viewQuoteButtons quote =
+  button [ class "delete-quote-button", onClick ( RemoveSavedQuote quote ) ] [ text "×" ]

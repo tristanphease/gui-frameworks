@@ -8,7 +8,18 @@
 </head>
 <body>
     <script>
-        const app = Elm.Main.init();
+        const storedQuotes = localStorage.getItem("app-quotes");
+        const startingState = storedQuotes ? JSON.parse(storedQuotes) : null;
+
+        const app = Elm.Main.init({ flags: startingState });
+
+        app.ports.storeQuotes.subscribe((quotes) => {
+            if (quotes) {
+                const quotesJson = JSON.stringify(quotes);
+                localStorage.setItem("app-quotes", quotesJson);
+                app.ports.getStoredQuotes.send(quotes);
+            }
+        });
     </script>
 </body>
 </html>

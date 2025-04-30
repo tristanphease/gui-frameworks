@@ -1,64 +1,101 @@
-
 // simple equation
 
 use std::fmt::Display;
 
 use rand::distr::{Distribution, StandardUniform};
 
-#[derive(Debug)]
+use super::Equation;
+
+#[derive(Debug, PartialEq, Eq)]
 pub struct SimpleEquation {
-    base_value: i32,
-    equation_values: Vec<EquationValue>
+    equation_value: EquationValue,
 }
 
 impl SimpleEquation {
-    fn new(base: i32, operator: BasicOperator, second_value: i32) -> Self {
+    fn new(operator: BasicOperator, left: i32, right: i32) -> Self {
         Self {
-            base_value: base,
-            equation_values: vec![EquationValue::new(operator, second_value)],
+            equation_value: EquationValue::new(operator, left, right),
         }
+    }
+}
+
+impl Equation<i32> for SimpleEquation {
+    fn calc_value(&self) -> i32 {
+        self.equation_value.calc_value()
     }
 }
 
 impl Display for SimpleEquation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.base_value)?;
-        for equation_val in &self.equation_values {
-            write!(f, " {} {}", equation_val.operator, equation_val.value)?;
-        }
-        Ok(())
+        write!(f, "{}", self.equation_value)
     }
 }
 
 pub fn new_simple_equation() -> SimpleEquation {
-    let base_value = rand::random_range(-10..=10);
-    let second_value = rand::random_range(-10..=10);
+    let left = rand::random_range(-10..=10);
+    let right = rand::random_range(-10..=10);
 
     let operator = rand::random::<BasicOperator>();
 
-    SimpleEquation::new(base_value, operator, second_value)
+    SimpleEquation::new(operator, left, right)
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 struct EquationValue {
     operator: BasicOperator,
-    value: i32,
+    value_left: i32,
+    value_right: i32,
 }
 
 impl EquationValue {
-    fn new(operator: BasicOperator, value: i32) -> Self {
+    fn new(operator: BasicOperator, value_left: i32, value_right: i32) -> Self {
         Self {
             operator,
-            value,
+            value_left,
+            value_right,
         }
     }
 }
 
-#[derive(Debug)]
+impl Equation<i32> for EquationValue {
+    fn calc_value(&self) -> i32 {
+        self.operator.calc(self.value_left, self.value_right)
+    }
+}
+
+impl Display for EquationValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} {} {}",
+            self.value_left, self.operator, self.value_right
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
 enum BasicOperator {
     Multiply,
     Add,
     Subtract,
+}
+
+impl BasicOperator {
+    fn operation_order(&self) -> i32 {
+        match self {
+            BasicOperator::Add => 0,
+            BasicOperator::Subtract => 0,
+            BasicOperator::Multiply => 1,
+        }
+    }
+
+    fn calc(&self, left: i32, right: i32) -> i32 {
+        match self {
+            BasicOperator::Multiply => left * right,
+            BasicOperator::Add => left + right,
+            BasicOperator::Subtract => left - right,
+        }
+    }
 }
 
 impl Display for BasicOperator {

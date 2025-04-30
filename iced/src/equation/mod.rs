@@ -1,6 +1,7 @@
+use std::fmt::Display;
 
 pub mod simple;
 
-trait Equation {
-    fn display_text<'a>() -> &'a str;
+pub trait Equation<T>: Display {
+    fn calc_value(&self) -> T;
 }

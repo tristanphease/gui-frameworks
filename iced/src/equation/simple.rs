@@ -19,8 +19,8 @@ impl SimpleEquation {
     }
 }
 
-impl Equation<i32> for SimpleEquation {
-    fn calc_value(&self) -> i32 {
+impl Equation for SimpleEquation {
+    fn calc_value(&self) -> f64 {
         self.equation_value.calc_value()
     }
 }
@@ -57,9 +57,9 @@ impl EquationValue {
     }
 }
 
-impl Equation<i32> for EquationValue {
-    fn calc_value(&self) -> i32 {
-        self.operator.calc(self.value_left, self.value_right)
+impl Equation for EquationValue {
+    fn calc_value(&self) -> f64 {
+        f64::from(self.operator.calc(self.value_left, self.value_right))
     }
 }
 
@@ -81,14 +81,6 @@ enum BasicOperator {
 }
 
 impl BasicOperator {
-    fn operation_order(&self) -> i32 {
-        match self {
-            BasicOperator::Add => 0,
-            BasicOperator::Subtract => 0,
-            BasicOperator::Multiply => 1,
-        }
-    }
-
     fn calc(&self, left: i32, right: i32) -> i32 {
         match self {
             BasicOperator::Multiply => left * right,

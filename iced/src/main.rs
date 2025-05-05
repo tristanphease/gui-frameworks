@@ -1,7 +1,7 @@
-use std::{
-    fmt::Display,
-    time::{Duration, Instant},
-};
+use std::fmt::Display;
+// use iced::time::{Duration,Instant};
+use wasm_timer::Instant;
+use std::time::Duration;
 
 use equation::{
     Equation,

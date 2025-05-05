@@ -1,4 +1,7 @@
-use std::fmt::Display;
+use std::{
+    fmt::Display,
+    time::{Duration, Instant},
+};
 
 use equation::{
     Equation,
@@ -6,22 +9,50 @@ use equation::{
     simple::new_simple_equation,
 };
 use iced::{
-    Background, Color, Element, Font, Length, Padding,
+    Background, Color, Element, Font, Length, Padding, Subscription,
     font::Weight,
     gradient::Linear,
+    time,
     widget::{Button, button, column, container, row, text, text_input},
 };
 
 pub mod equation;
 
 fn main() -> iced::Result {
-    iced::run("Number Pain", update, view)
+    iced::application("Number Pain", update, view)
+        .subscription(subscription)
+        .run()
 }
 
 /// The state of the program
 #[derive(Debug, Default)]
 struct Model {
     program_state: ProgramState,
+    timer: Timer,
+}
+
+#[derive(Debug)]
+struct Timer {
+    time_taken: Duration,
+    last_tick: Option<Instant>,
+}
+
+impl Default for Timer {
+    fn default() -> Self {
+        Self {
+            time_taken: Default::default(),
+            last_tick: Default::default(),
+        }
+    }
+}
+
+impl Timer {
+    fn add_instant(&mut self, current_tick: Instant) {
+        if let Some(last_tick) = self.last_tick {
+            self.time_taken += current_tick - last_tick;
+        }
+        self.last_tick = Some(current_tick);
+    }
 }
 
 #[derive(Debug)]
@@ -42,6 +73,7 @@ struct EquationFinishedState {
     equation_progress: EquationProgress,
     equation_difficulty: EquationDifficulty,
     ended_early: bool,
+    background_colors: Vec<Color>,
 }
 
 /// The state of the equation model
@@ -156,6 +188,7 @@ fn update(model: &mut Model, message: Message) {
                         equation_progress: equation_state.equation_progress.clone(),
                         equation_difficulty: equation_state.equation_difficulty,
                         ended_early: false,
+                        background_colors: generate_finish_menu_colors(),
                     };
                     model.program_state = ProgramState::FinishedEquation(equation_finished);
                 } else {
@@ -179,11 +212,15 @@ fn update(model: &mut Model, message: Message) {
                     equation_progress: equation_model_state.equation_progress.clone(),
                     equation_difficulty: equation_model_state.equation_difficulty,
                     ended_early: true,
+                    background_colors: generate_finish_menu_colors(),
                 };
                 model.program_state = ProgramState::FinishedEquation(equation_finished);
             }
             _ => {}
         },
+        Message::Tick(now) => {
+            model.timer.add_instant(now);
+        }
     }
 }
 
@@ -205,7 +242,10 @@ fn view(model: &Model) -> Element<Message> {
             container(button(text("Start game")).on_press(Message::StartGame))
                 .center_x(Length::Fill),
         ])
-        .style(|_theme| container::Style::default().background(background()))
+        .style(|_theme| {
+            container::Style::default()
+                .background(start_menu_background(model.timer.time_taken.as_secs_f32()))
+        })
         .center_x(Length::Fill)
         .center_y(Length::Fill)
         .into(),
@@ -271,19 +311,48 @@ fn view(model: &Model) -> Element<Message> {
                 )
                 .max_width(400),
             )
+            .style(|_theme| {
+                container::Style::default().background(finish_menu_background(
+                    model.timer.time_taken.as_secs_f32(),
+                    &finished_state.background_colors,
+                ))
+            })
             .center(Length::Fill)
             .into()
         }
     }
 }
 
-fn background() -> Background {
+fn start_menu_background(time_taken: f32) -> Background {
     Background::Gradient(iced::Gradient::Linear(
-        Linear::new(std::f32::consts::FRAC_PI_3)
+        Linear::new(time_taken * 0.1)
             .add_stop(0.0, Color::from_rgb(0.2, 0.2, 0.3))
-            .add_stop(0.5, Color::BLACK)
+            .add_stop(0.5, Color::from_rgb(0.1, 0.1, 0.2))
             .add_stop(1.0, Color::from_rgb(0.2, 0.2, 0.3)),
     ))
+}
+
+fn finish_menu_background(_time_taken: f32, colors: &Vec<Color>) -> Background {
+    let mut linear_gradient = Linear::new(std::f32::consts::FRAC_PI_3);
+    let colors_len = (colors.len() - 1) as f32;
+    for (index, color) in colors.iter().enumerate() {
+        let index_f32 = index as f32;
+        linear_gradient = linear_gradient.add_stop(index_f32 / colors_len, *color);
+    }
+    Background::Gradient(iced::Gradient::Linear(linear_gradient))
+}
+
+fn generate_finish_menu_colors() -> Vec<Color> {
+    let mut colors = vec![Color::default(); 8];
+    for color in colors.iter_mut() {
+        *color = random_color();
+    }
+    colors
+}
+
+fn random_color() -> Color {
+    let rand_dark = || rand::random::<f32>() * 0.3;
+    Color::from_rgb(rand_dark(), rand_dark(), rand_dark())
 }
 
 fn difficulty_button<'a>(
@@ -305,6 +374,10 @@ fn difficulty_button<'a>(
         })
 }
 
+fn subscription(_model: &Model) -> Subscription<Message> {
+    time::every(time::Duration::from_millis(10)).map(Message::Tick)
+}
+
 #[derive(Debug, Clone)]
 enum Message {
     StartGame,
@@ -313,4 +386,5 @@ enum Message {
     CancelEquation,
     ChangeDifficulty(EquationDifficulty),
     ReturnMenu,
+    Tick(Instant),
 }

@@ -46,8 +46,10 @@ fn generate_equation_backwards(depth: i32) -> Node {
                 (left_value, right_value)
             }
             DoubleOperator::Subtract => {
+                // a - b = c
+                // make random a, then b = a - c
                 let left_value = random_f64();
-                let right_value = end_value + left_value;
+                let right_value = left_value - end_value;
 
                 (left_value, right_value)
             }
@@ -66,7 +68,7 @@ fn generate_equation_backwards(depth: i32) -> Node {
                 // a / b = c
                 // need a to be a multiple of b
                 // choose small value to make it even
-                let right_value = random_f64_choose(50, 1);
+                let right_value = find_divisor(end_value, 1);
                 let left_value = right_value * end_value;
 
                 (left_value, right_value)
@@ -101,15 +103,16 @@ fn find_float_factors(num: f64, precision: u32) -> Vec<(f64, f64)> {
     let num_with_precision = num.abs() * precision_f64;
     // the highest number we need to check for factors is the square root
     let max_num = num_with_precision.sqrt() as i32 + 1;
-    let num_with_precision = num_with_precision as i32;
+    let num_with_precision = num_with_precision.round() as i32;
     let mut factors = vec![];
     for value in 1..max_num {
         // check if it's a factor
         if num_with_precision % value == 0 {
             let factor_1 = value;
             let factor_2 = num_with_precision / value;
-            let factor_1_precision = f64::from(factor_1) / precision_f64;
-            let factor_2_precision = f64::from(factor_2) / precision_f64;
+            let first = rand::random();
+            let factor_1_precision = if first { f64::from(factor_1) / precision_f64 } else { f64::from(factor_1) };
+            let factor_2_precision = if !first { f64::from(factor_2) / precision_f64 } else { f64::from(factor_2) };
 
             let (sign_1, sign_2) = match (positive, rand::random()) {
                 (true, true) => (1.0, 1.0),
@@ -158,8 +161,17 @@ fn random_f64() -> f64 {
     f64::from(rand::random_range(0..1000) - 500) * 0.1
 }
 
-fn random_f64_choose(max: i32, precision: u32) -> f64 {
-    f64::from(rand::random_range(-max..max)) / f64::from(10i32.pow(precision))
+fn find_divisor(end_value: f64, precision: u32) -> f64 {
+    let mut all_divisors = Vec::new();
+    let precision_f64 = f64::from(10i32.pow(precision)); 
+    let end_value = (end_value * precision_f64) as i32;
+    for value in 1..500 {
+        if (value * end_value) % 10 == 0 {
+            all_divisors.push(value);
+        } 
+    }
+    let divisor_value = all_divisors.choose(&mut rand::rng()).unwrap();
+    (*divisor_value as f64) / precision_f64 
 }
 
 #[derive(Debug)]
@@ -229,6 +241,7 @@ impl Equation for LeafNode {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 enum TreeNode {
     DoubleTreeNode(DoubleTreeNode),
@@ -263,9 +276,9 @@ struct DoubleTreeNode {
 impl Display for DoubleTreeNode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.operator {
-            DoubleOperator::Add => write!(f, "{}+{}", self.left_value, self.right_value),
-            DoubleOperator::Subtract => write!(f, "{}-{}", self.left_value, self.right_value),
-            DoubleOperator::Multiply => write!(f, "{}×{}", self.left_value, self.right_value),
+            DoubleOperator::Add => write!(f, "({})+({})", self.left_value, self.right_value),
+            DoubleOperator::Subtract => write!(f, "({})-({})", self.left_value, self.right_value),
+            DoubleOperator::Multiply => write!(f, "({})×({})", self.left_value, self.right_value),
             DoubleOperator::Divide => write!(f, "({})÷({})", self.left_value, self.right_value),
         }
     }
@@ -331,6 +344,7 @@ impl Distribution<DoubleOperator> for StandardUniform {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 enum SingleOperator {
     Brackets,

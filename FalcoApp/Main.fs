@@ -5,9 +5,9 @@ open Falco.Markup
 
 let mainHtml : XmlNode =
     Elem.div [] [
-        Text.p "hi"
+        Text.h2 "Hey!"
     ]
 
 let mainPage : HttpHandler = 
-    Base.basePage "header" mainHtml
+    Base.basePage (Some "Main Page") "Main Page" mainHtml
 

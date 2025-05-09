@@ -1,0 +1,1 @@
+Run ```dotnet run --project=src\BoleroApp.Client\BoleroApp.Client.fsproj```

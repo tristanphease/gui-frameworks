@@ -1,0 +1,113 @@
+
+/* Main top level variables */
+
+@media (prefers-color-scheme: dark) { 
+    :root {
+        --dark-theme: 1;
+    }
+}
+@media (prefers-color-scheme: light) { 
+    :root {
+        --dark-theme: 0;
+    }
+}
+
+/* Default rules for stylesheet */
+
+* {
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    color: var(--text-color);
+}
+
+html {
+    background-color: var(--bg-color);
+}
+
+:root {
+    --bg-color: hsl(0, 0%, var(--bg-luminance));
+    --text-color: hsl(0, 0%, var(--text-luminance));
+}
+
+/* Theme rules */
+/* 
+Not supported in firefox unfortunately :(
+https://developer.mozilla.org/en-US/docs/Web/CSS/@container#browser_compatibility 
+Therefore do it using a scuffed calc method
+*/
+
+/* @container style(--theme: light) {
+    .main-border, .secondary-border {
+        --border-luminance: 30%;
+    }
+
+    :root {
+        --bg-luminance: 90%;
+        --text-luminance: 10%;
+    }
+}
+
+@container style(--theme: dark) {
+    .main-border, .secondary-border {
+        --border-luminance: 90%;
+    }
+
+    :root {
+        --bg-luminance: 10%;
+        --text-luminance: 90%;
+    }
+
+} */
+
+.main-border, .secondary-border {
+    --border-luminance: calc(1% * (var(--dark-theme) * 60 + 30));
+}
+
+:root {
+    --bg-luminance: calc(1% * ((1 - var(--dark-theme)) * 80 + 10));
+    --text-luminance: calc(1% * (var(--dark-theme) * 80 + 10));
+}
+
+/* CSS classes to add to elements */
+
+.main-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.header-text {
+    font-size: 60px;
+}
+
+
+
+.main-border, .secondary-border {
+    border: 30px solid transparent;
+    padding: 20px;
+    border-radius: 20px;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    
+    background-image:
+        linear-gradient(var(--bg-color), var(--bg-color)), 
+            linear-gradient(45deg, hsl(var(--color-1), 100%, var(--border-luminance)), 
+                hsl(var(--color-2), 100%, var(--border-luminance)));
+}
+
+.main-border {
+    --color-1: 180;
+    --color-2: 120;
+}
+
+.secondary-border {
+    --color-1: 60;
+    --color-2: 0;
+}
+
+.min-width-800 {
+    width: 800px;
+}
+
+.centre-text {
+    text-align: center;
+}

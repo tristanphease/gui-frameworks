@@ -17,6 +17,9 @@ let update (message: MainMessage) (model: MainModel) =
     match message with
         | Blank -> model, Cmd.none
 
+let title : string =
+    "Main"
+
 let view (model: MainModel) (dispatch: Dispatch<MainMessage>) =
     Node.Text "This is the main page!"
 

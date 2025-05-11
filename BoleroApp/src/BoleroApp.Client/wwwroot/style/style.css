@@ -37,6 +37,11 @@ button {
     border: 2px inset grey;
 }
 
+svg {
+    width: 100%;
+    height: 100%;
+}
+
 /* Theme rules */
 /* 
 Not supported in firefox unfortunately :(
@@ -144,6 +149,18 @@ Therefore do it using a scuffed calc method
     align-items: start;
 }
 
+.align-self-start {
+    align-self: flex-end;
+}
+
+.align-self-end {
+    align-self: flex-end;
+}
+
+.flex-grow {
+    flex-grow: 1;
+}
+
 .gap-10 {
     gap: 10px;
 }
@@ -156,9 +173,23 @@ Therefore do it using a scuffed calc method
     padding: 5px;
 }
 
+.icon {
+    width: 100px;
+    height: 100px;
+}
+
 .error-message {
     background-color: hsl(0, 100%, var(--error-luminance));
     color: var(--bg-color);
     align-self: flex-start;
     padding: 5px;
+}
+
+.opacity-30 {
+    opacity: 0.3;
+}
+
+.blank-background {
+    background-color: transparent;
+    border: 0px;
 }

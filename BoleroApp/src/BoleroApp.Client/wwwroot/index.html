@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title id="title">Cool Application</title>
+    <title>App</title>
     <base href="/">
     <link rel="stylesheet" href="style/style.css">
 </head>
 <body>
-    <div class="main-wrapper">
+    <div id="program" class="main-wrapper">
         <div class="main-border min-width-800 centre-text">
             <nav id="navbar">
                 <span>Nav:</span>
@@ -16,14 +16,22 @@
                 <a href="/createquiz">Create a Quiz</a>
             </nav>
             <h1 class="header-text">Main Page</h1>
-            <div>
-                Toggle dark mode
-            </div>
         </div>
-        <div id="program" class="secondary-border min-width-800">
+        <div class="secondary-border min-width-800">
             <h2>Loading Webpage!</h2>
         </div>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
+
+    <script>
+        /**
+         * Wrapper method for setting the css variable for the dark theme
+         */
+        function setDarkMode(mode) {
+            const rootElem = document.querySelector(":root");
+            const modeNum = mode ? 1 : 0;
+            rootElem.style.setProperty("--dark-theme", modeNum);
+        }
+    </script>
 </body>
 </html>

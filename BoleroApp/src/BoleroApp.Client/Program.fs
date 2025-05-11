@@ -2,6 +2,7 @@ module BoleroApp.Client.Program
 
 open Elmish
 open Bolero
+open Microsoft.AspNetCore.Components.Web
 
 type Page = 
     | [<EndPoint "/">] Main of PageModel<Main.MainModel>
@@ -11,7 +12,8 @@ type Page =
 type Model = 
     {
         page: Page;
-        navbar: bool
+        navbar: bool;
+        themeModel: Theme.Model;
     }
 
 // main message 
@@ -19,6 +21,7 @@ type Message =
     | SetPage of Page
     | Main of Main.MainMessage 
     | CreateQuiz of CreateQuiz.Message
+    | ThemeMessage of Theme.Message
 
 let update (message: Message) (model: Model) =
     match message with
@@ -36,6 +39,9 @@ let update (message: Message) (model: Model) =
                     let newQuizModel, quizCmd = CreateQuiz.update quizMessage quizModel.Model
                     { model with page = Page.CreateQuiz { Model = newQuizModel }}, Cmd.map CreateQuiz quizCmd
                 | _ -> model, Cmd.none
+        | ThemeMessage themeMessage -> 
+            let newThemeModel, themeCmd = Theme.update themeMessage model.themeModel
+            { model with themeModel = newThemeModel }, Cmd.map ThemeMessage themeCmd
 
 let defaultModel page = 
     match page with
@@ -47,19 +53,37 @@ let router = Router.inferWithModel SetPage (fun model -> model.page) defaultMode
 
 type Program = Template<"wwwroot/program.html">
 
+let themeElementView (programModel: Model) (dispatch: Dispatch<Message>) : Node =
+    Html.ecomp<Theme.ThemeComponent,_,_> 
+        programModel.themeModel
+        ( fun mess -> dispatch (ThemeMessage mess) )
+        { Html.attr.empty() }
+
 let view (model: Model) (dispatch: Dispatch<Message>) =
-    Program()
-        .Body(
-            Html.cond model.page <| function
-                | Page.Main x -> Main.view x.Model (dispatch << Message.Main)                
-                | Page.CreateQuiz x -> CreateQuiz.view x.Model (dispatch << Message.CreateQuiz)
-        )
-        .Elt()
+    Html.concat {
+        Program()
+            .Body(
+                Html.cond model.page <| function
+                    | Page.Main x -> Main.view x.Model (dispatch << Message.Main)                
+                    | Page.CreateQuiz x -> CreateQuiz.view x.Model (dispatch << Message.CreateQuiz)
+            )
+            .Theme(
+                themeElementView model dispatch
+            )
+            .Elt()
+        Html.comp<PageTitle> { 
+            Html.text ("App - " + 
+                match model.page with
+                    | Page.Main _ -> Main.title
+                    | Page.CreateQuiz _ -> CreateQuiz.title)
+        }
+    }
 
 let init _ =
     {
         page = Page.Main { Model = Main.initModel };
-        navbar = false
+        navbar = false;
+        themeModel = Theme.initModel
     },
     Cmd.none
 

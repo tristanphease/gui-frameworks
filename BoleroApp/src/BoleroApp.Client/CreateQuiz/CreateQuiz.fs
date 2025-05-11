@@ -41,6 +41,7 @@ type Message =
     | ClearError
     | EditExistingQuestion of index : int 
     | DeleteExistingQuestion of index : int
+    | SaveQuizFile
 
 /// Create a new blank question
 let newQuestion : QuizQuestion = 
@@ -102,6 +103,10 @@ let update (message: Message) (model: Model) : Model * Cmd<Message> =
         | ClearError -> { model with errorMessage = None}, Cmd.none        
         | EditExistingQuestion index -> setExistingQuestion index model
         | DeleteExistingQuestion index -> { model with questions = deleteIndex index model.questions }, Cmd.none
+        | SaveQuizFile -> failwith "unimplemented"
+
+let title : string =
+    "Create Quiz"
 
 type CreateQuiz = Template<"CreateQuiz/createquiz.html">
 
@@ -136,5 +141,6 @@ let view (model: Model) (dispatch: Dispatch<Message>) : Node =
         .ExistingQuestions(Html.forEach (List.indexed model.questions) (viewExistingQuestion dispatch))
         .ErrorMessage(Option.defaultValue String.Empty model.errorMessage)
         .ErrorMessageClass(if model.errorMessage.IsSome then String.Empty else "hidden")
+        .SaveQuizFile(fun _ -> dispatch SaveQuizFile)
         .Elt()
 

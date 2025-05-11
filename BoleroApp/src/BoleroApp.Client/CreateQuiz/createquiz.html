@@ -1,0 +1,51 @@
+<div class="flex-column gap-10">
+    <div>
+        <span>Question:</span>
+        <input placeholder="Question" type="text" bind="${CurrentQuestion}" />
+    </div>
+    <div class="flex-row gap-10 flex-wrap">
+        ${CurrentQuestionOptions}
+        <template id="CurrentQuestionOption">
+            <div class="flex-column gap-10 align-start">
+                <input placeholder="Option" type="text" bind="${Option}" />
+                <button onclick="${DeleteOption}">Delete</button>
+            </div>
+        </template>
+        <button onclick="${AddOption}">Add option</button>
+    </div>
+    <div>
+        <button onclick="${AddCurrentQuestion}">Add current question</button>
+    </div>
+    <span class="error-message ${ErrorMessageClass}">
+        ${ErrorMessage}
+    </span>
+</div>
+
+<div id="quiz-controls">
+    <h3>Controls</h3>
+    <div>
+        <button>Save quiz to file</button>
+        <button>Go to quiz</button>
+    </div>
+</div>
+
+<div id="existing-questions">
+    <h2>Existing Questions</h2>
+
+    <div class="flex-column gap-10">
+        ${ExistingQuestions}
+        <template id="ExistingQuestion">
+            <div class="border-small">
+                <h4>${Question}</h4>
+                <div class="flex-row gap-10 padding-5">
+                    ${QuestionOptions}
+                    <template id="QuestionOption">
+                        <span class="border-small padding-5">${Option}</span>
+                    </template>
+                </div>
+                <button onclick="${EditQuestion}">Edit</button>
+                <button onclick="${DeleteQuestion}">Delete</button>
+            </div>
+        </template>
+    </div>
+</div>

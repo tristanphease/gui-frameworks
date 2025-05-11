@@ -11,7 +11,5 @@ module Startup =
     let Main args =
         let builder = WebAssemblyHostBuilder.CreateDefault args
         builder.RootComponents.Add<Program.BoleroApp> "#program"
-        builder.Services.AddScoped<HttpClient>(fun _ ->
-            new HttpClient(BaseAddress = Uri builder.HostEnvironment.BaseAddress)) |> ignore
         builder.Build().RunAsync() |> ignore
         0

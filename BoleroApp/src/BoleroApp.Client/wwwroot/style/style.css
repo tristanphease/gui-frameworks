@@ -150,11 +150,15 @@ Therefore do it using a scuffed calc method
 }
 
 .align-self-start {
-    align-self: flex-end;
+    align-self: flex-start;
 }
 
 .align-self-end {
     align-self: flex-end;
+}
+
+.text-left {
+    text-align: left;
 }
 
 .flex-grow {
@@ -192,4 +196,36 @@ Therefore do it using a scuffed calc method
 .blank-background {
     background-color: transparent;
     border: 0px;
+}
+
+.text-color {
+    color: var(--text-color);
+    font-size: 30px;
+}
+
+.round-border {
+    border: 3px solid var(--text-color);
+    border-radius: 40px;   
+}
+
+.nav-circle {
+    clip-path: ellipse(35px 25px);
+    width: 70px;
+    height: 50px;
+    display: block;
+    text-align: center;
+    align-content: center;
+    background-color: var(--text-color);
+    color: var(--bg-color);
+    position: relative;
+}
+
+.first-nav-circle {
+    left: 70px;
+    top: -40px;
+}
+
+.second-nav-circle {
+    left: 45px;
+    top: -35px;
 }

@@ -11,14 +11,12 @@ type MainMessage =
     | Blank
 
 
-// type Title = Template<"""<title id="title">${Title}</title>""">
-
 let update (message: MainMessage) (model: MainModel) =
     match message with
         | Blank -> model, Cmd.none
 
 let title : string =
-    "Main"
+    "Main Page"
 
 let view (model: MainModel) (dispatch: Dispatch<MainMessage>) =
     Node.Text "This is the main page!"

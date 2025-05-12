@@ -22,6 +22,7 @@ type Message =
     | Main of Main.MainMessage 
     | CreateQuiz of CreateQuiz.Message
     | ThemeMessage of Theme.Message
+    | ToggleNavBar
 
 let update (message: Message) (model: Model) =
     match message with
@@ -42,6 +43,7 @@ let update (message: Message) (model: Model) =
         | ThemeMessage themeMessage -> 
             let newThemeModel, themeCmd = Theme.update themeMessage model.themeModel
             { model with themeModel = newThemeModel }, Cmd.map ThemeMessage themeCmd
+        | ToggleNavBar -> { model with navbar = not model.navbar }, Cmd.none
 
 let defaultModel page = 
     match page with
@@ -59,23 +61,53 @@ let themeElementView (programModel: Model) (dispatch: Dispatch<Message>) : Node 
         ( fun mess -> dispatch (ThemeMessage mess) )
         { Html.attr.empty() }
 
+let pageTitle page : string =
+    match page with
+        | Page.Main _ -> Main.title
+        | Page.CreateQuiz _ -> CreateQuiz.title
+
+let navBarView navbar dispatch =
+    Html.div {
+        Html.attr.``class`` "align-self-start text-left"
+        Html.button { 
+            Html.attr.``class`` "blank-background text-color round-border padding-5 "
+            Html.on.click (fun _ -> dispatch ToggleNavBar)
+            Html.text "Nav"
+        }
+        if navbar then
+            Html.div {
+                Html.a {
+                    Html.attr.``class`` "nav-circle first-nav-circle"
+                    Html.attr.href "/" 
+                    Html.text "Main Page"
+                }
+                Html.a {
+                    Html.attr.``class`` "nav-circle second-nav-circle"
+                    Html.attr.href "/createquiz"
+                    Html.text "Create a Quiz"
+                }
+            }
+    }
+
+
 let view (model: Model) (dispatch: Dispatch<Message>) =
     Html.concat {
         Program()
+            .NavBar(
+                navBarView model.navbar dispatch
+            )
             .Body(
                 Html.cond model.page <| function
                     | Page.Main x -> Main.view x.Model (dispatch << Message.Main)                
                     | Page.CreateQuiz x -> CreateQuiz.view x.Model (dispatch << Message.CreateQuiz)
             )
+            .Title(pageTitle model.page)
             .Theme(
                 themeElementView model dispatch
             )
             .Elt()
         Html.comp<PageTitle> { 
-            Html.text ("App - " + 
-                match model.page with
-                    | Page.Main _ -> Main.title
-                    | Page.CreateQuiz _ -> CreateQuiz.title)
+            Html.text ("App - " + pageTitle model.page)
         }
     }
 

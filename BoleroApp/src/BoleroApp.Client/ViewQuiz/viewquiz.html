@@ -1,0 +1,66 @@
+<div>
+    <div id="quiz-controls">
+        <h3>Controls</h3>
+        <div>
+            <button onclick="${LoadQuizFile}">Load quiz from file</button>
+            <button>Back to edit quiz</button>
+        </div>
+    </div>
+
+
+    ${QuizView}
+
+    <template id="QuizNotLoadedTemplate">
+        <div>
+            Quiz not loaded
+        </div>
+    </template>
+
+    <template id="QuizViewTemplate">
+        ${QuizQuestions}
+        <template id="Question">
+
+            <span>
+                ${QuizQuestion}
+            </span>
+
+            ${QuestionOptions}
+            
+            
+            <template id="QuestionOption">
+                <div>
+                    <input type="radio" id="question-${QuestionIndex}-${OptionIndex}" 
+                        name="question-${QuestionIndex}" onchange="${RadioSelected}"  />
+                    <label for="question-${QuestionIndex}-${OptionIndex}">${OptionName}</label>
+                </div>
+            </template>
+        </template>
+
+        <button onclick="${CompleteQuiz}">Complete Quiz</button>
+    </template>
+
+    <template id="QuizCompletedTemplate">
+        <div>
+            Completed Quiz!
+        </div>
+        <div>
+            Scored ${CorrectScore}/${MaxScore}!
+        </div>
+
+        ${QuestionWithAnswer}
+        <template id="QuestionWithAnswerTemplate">
+            <div>
+                ${QuestionOptionWithAnswer}
+                <template id="QuestionOptionWithAnswer">
+                    <div>
+                        <p class="${QuestionOptionClass}">
+                            ${OptionName}
+                        </p>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </template>
+    
+</div>
+

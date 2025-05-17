@@ -1,15 +1,11 @@
-module CreateQuiz
+module BoleroApp.Client.CreateQuiz
 
 open System
 open Elmish
 open Bolero
+open Quiz
+open Microsoft.JSInterop
 
-/// A quiz question
-type QuizQuestion = 
-    {
-        question: string;
-        options: list<string>
-    }
 
 /// The model for the create quiz page
 type Model =
@@ -37,17 +33,21 @@ type Message =
     | AddOption
     | SetOption of index : int * value : string
     | DeleteOption of index : int 
+    | SetCorrectOption of index : int
     | SetError of ErrorMessage
     | ClearError
     | EditExistingQuestion of index : int 
     | DeleteExistingQuestion of index : int
     | SaveQuizFile
+    | LoadQuizFromFile
+    | LoadFileMessage of File.FileMessage
 
 /// Create a new blank question
 let newQuestion : QuizQuestion = 
     {
         question = String.Empty;
-        options = [String.Empty]
+        options = [String.Empty];
+        correctAnswer = 0;
     }
 
 /// Initiate the model for the create quiz page
@@ -63,22 +63,13 @@ let init _ =
     initModel,
     Cmd.none
 
-/// Function that takes in an index and new value and returns the list with the new value at the index
-let modifyIndex (index: int) (newValue: 'a) : (list<'a> -> list<'a>) =
-    List.mapi (fun i x -> if i = index then newValue else x) 
-
-/// Function that takes in an index and a list and will return a new list without the element at that index
-let deleteIndex (index: int) : (list<'a> -> list<'a>) =
-    List.mapi (fun i x -> if i = index then None else Some x)
-        >> List.choose id
-
 /// Add the current question to the existing questions
 let addCurrentQuestion (model: Model) : Model * Cmd<Message>  = 
     if model.currentQuestion.options.Length < 2
     then model, Cmd.ofMsg (SetError NotEnoughOptions)
     else if model.currentQuestion.question = String.Empty 
     then model, Cmd.ofMsg (SetError EmptyQuestion) 
-    else { model with questions = model.currentQuestion :: model.questions; currentQuestion = newQuestion}, Cmd.ofMsg ClearError
+    else { model with questions = model.questions @ [model.currentQuestion]; currentQuestion = newQuestion}, Cmd.ofMsg ClearError
 
 let isQuestionBlank (question: QuizQuestion) : bool =
     question.question = String.Empty 
@@ -88,22 +79,48 @@ let setExistingQuestion (index: int) (model: Model) : Model * Cmd<Message> =
     if not (isQuestionBlank model.currentQuestion) then
         model, Cmd.ofMsg (SetError ClearExisting)
     else 
-        { model with currentQuestion = List.item index model.questions; questions = deleteIndex index model.questions}, Cmd.none
+        { model with currentQuestion = List.item index model.questions; questions = Util.deleteIndex index model.questions}, Cmd.none
 
+let newIndex currentIndex deletedIndex =
+    if currentIndex = deletedIndex && currentIndex > 0 || currentIndex > deletedIndex
+    then currentIndex - 1
+    else currentIndex
 
 /// Update for message
-let update (message: Message) (model: Model) : Model * Cmd<Message> =
+let update (jsRuntime: IJSRuntime) (message: Message) (model: Model) : Model * Cmd<Message> =
     match message with 
-        | AddCurrentQuestion -> addCurrentQuestion model
-        | SetCurrentQuestion newQuestion -> { model with currentQuestion.question = newQuestion }, Cmd.none
-        | AddOption -> { model with currentQuestion.options = model.currentQuestion.options @ [String.Empty] }, Cmd.none
-        | SetOption (index, newValue) -> { model with currentQuestion.options = model.currentQuestion.options |> modifyIndex index newValue }, Cmd.none        
-        | DeleteOption index -> { model with currentQuestion.options = deleteIndex index model.currentQuestion.options }, Cmd.none 
-        | SetError error -> { model with errorMessage = Some (errorMessageToString error) }, Cmd.none
-        | ClearError -> { model with errorMessage = None}, Cmd.none        
-        | EditExistingQuestion index -> setExistingQuestion index model
-        | DeleteExistingQuestion index -> { model with questions = deleteIndex index model.questions }, Cmd.none
-        | SaveQuizFile -> failwith "unimplemented"
+        | AddCurrentQuestion -> 
+            addCurrentQuestion model
+        | SetCurrentQuestion newQuestion -> 
+            { model with currentQuestion.question = newQuestion }, Cmd.none
+        | AddOption -> 
+            { model with currentQuestion.options = model.currentQuestion.options @ [String.Empty] }, Cmd.none
+        | SetOption (index, newValue) -> 
+            { model with currentQuestion.options = model.currentQuestion.options |> Util.modifyIndex index newValue }, Cmd.none        
+        | DeleteOption index -> 
+            { model with currentQuestion = { model.currentQuestion with options = Util.deleteIndex index model.currentQuestion.options; correctAnswer = newIndex model.currentQuestion.correctAnswer index } }, Cmd.none 
+        | SetError error -> 
+            { model with errorMessage = Some (errorMessageToString error) }, Cmd.none
+        | ClearError -> 
+            { model with errorMessage = None}, Cmd.none        
+        | EditExistingQuestion index -> 
+            setExistingQuestion index model
+        | DeleteExistingQuestion index -> 
+            { model with questions = Util.deleteIndex index model.questions }, Cmd.none
+        | SaveQuizFile -> 
+            let quizJson = Quiz.quizToJson model.questions
+            File.saveFile jsRuntime quizJson 
+            model, Cmd.none
+        | SetCorrectOption index -> 
+            { model with currentQuestion.correctAnswer = index}, Cmd.none
+        | LoadQuizFromFile -> 
+            model, Cmd.map LoadFileMessage (File.loadFile jsRuntime)        
+        | LoadFileMessage (File.ReturnedFileInfo quizJson) -> 
+            let questions = Quiz.quizFromJson quizJson
+            { model with questions = questions }, Cmd.none
+        | LoadFileMessage File.ErrorLoading ->
+            { model with errorMessage = Some "Couldn't load file" }, Cmd.none
+            
 
 let title : string =
     "Create Quiz"
@@ -111,10 +128,13 @@ let title : string =
 type CreateQuiz = Template<"CreateQuiz/createquiz.html">
 
 /// View for a current question option
-let viewCurrentQuestionOption (dispatch: Dispatch<Message>) (index: int, option: string) =
+let viewCurrentQuestionOption (dispatch: Dispatch<Message>) (correctIndex: int) (index: int, option: string)  =
     CreateQuiz.CurrentQuestionOption()
         .Option(option, fun newValue -> dispatch (SetOption(index, newValue)))
+        .OptionClass(if correctIndex = index then "correct-background" else String.Empty)
+        .OptionObjectClass(if correctIndex = index then "opacity-80" else String.Empty)
         .DeleteOption(fun _ -> dispatch (DeleteOption index))
+        .SetCorrect(fun _ -> dispatch (SetCorrectOption index))
         .Elt()
 
 /// View for an existing question option
@@ -135,12 +155,13 @@ let viewExistingQuestion (dispatch: Dispatch<Message>) (index: int, quizQuestion
 let view (model: Model) (dispatch: Dispatch<Message>) : Node =
     CreateQuiz()
         .CurrentQuestion(model.currentQuestion.question, fun n -> dispatch (SetCurrentQuestion n))
-        .CurrentQuestionOptions(Html.forEach (List.indexed model.currentQuestion.options) (viewCurrentQuestionOption dispatch))
+        .CurrentQuestionOptions(Html.forEach (List.indexed model.currentQuestion.options) (viewCurrentQuestionOption dispatch model.currentQuestion.correctAnswer))
         .AddCurrentQuestion(fun _ -> dispatch AddCurrentQuestion)
         .AddOption(fun _ -> dispatch AddOption)
         .ExistingQuestions(Html.forEach (List.indexed model.questions) (viewExistingQuestion dispatch))
         .ErrorMessage(Option.defaultValue String.Empty model.errorMessage)
         .ErrorMessageClass(if model.errorMessage.IsSome then String.Empty else "hidden")
         .SaveQuizFile(fun _ -> dispatch SaveQuizFile)
+        .LoadQuizFile(fun _ -> dispatch LoadQuizFromFile)
         .Elt()
 

@@ -23,26 +23,23 @@ let initModel =
 type Message = 
     | ToggleTheme
 
-let update message model = 
+let update (jsRunTime: IJSRuntime) message model = 
     match message with 
-        | ToggleTheme -> { model with darkMode = not model.darkMode }, Cmd.none
+        | ToggleTheme -> 
+            let newDarkMode = not model.darkMode
+            jsRunTime.InvokeVoidAsync("setDarkMode", not model.darkMode).AsTask() |> ignore
+            { model with darkMode = newDarkMode }, Cmd.none
 
-type ThemeComponent() =
-    inherit ElmishComponent<Model, Message>()
-
-    [<Inject>]
-    member val JSRuntime = Unchecked.defaultof<IJSRuntime> with get, set
-
-    override this.View model dispatch : Node =
-        ThemeTemplate()
-            .ThemeIcon(
-                ThemeIconSvg()
-                    .MoonClass(if not model.darkMode then "opacity-30" else String.Empty)
-                    .SunClass(if model.darkMode then "opacity-30" else String.Empty)
-                    .Elt()
-            )
-            .ToggleTheme(fun _ -> this.JSRuntime.InvokeVoidAsync("setDarkMode", not model.darkMode).AsTask() |> ignore; dispatch ToggleTheme)
-            .Elt()
+let view model dispatch : Node =
+    ThemeTemplate()
+        .ThemeIcon(
+            ThemeIconSvg()
+                .MoonClass(if not model.darkMode then "opacity-30" else String.Empty)
+                .SunClass(if model.darkMode then "opacity-30" else String.Empty)
+                .Elt()
+        )
+        .ToggleTheme(fun _ -> dispatch ToggleTheme)
+        .Elt()
         
 
     

@@ -82,6 +82,7 @@ Therefore do it using a scuffed calc method
     --bg-luminance: calc(1% * ((1 - var(--dark-theme)) * 80 + 10));
     --text-luminance: calc(1% * (var(--dark-theme) * 80 + 10));
     --error-luminance: calc(1% * (var(--dark-theme) * 40 + 30));
+    --correct-luminance: calc(1% * (var(--dark-theme) * 40 + 30));
 }
 
 /* CSS classes to add to elements */
@@ -127,6 +128,10 @@ Therefore do it using a scuffed calc method
     width: 800px;
 }
 
+.width-500 {
+    width: 500px;
+}
+
 .centre-text {
     text-align: center;
 }
@@ -157,6 +162,10 @@ Therefore do it using a scuffed calc method
     align-self: flex-end;
 }
 
+.space-between {
+    justify-content: space-between;
+}
+
 .text-left {
     text-align: left;
 }
@@ -182,6 +191,14 @@ Therefore do it using a scuffed calc method
     height: 100px;
 }
 
+.correct-background {
+    background-color: hsl(123, 100%, var(--error-luminance));
+}
+
+.incorrect-background {
+    background-color: hsl(352, 100%, var(--correct-luminance));
+}
+
 .error-message {
     background-color: hsl(0, 100%, var(--error-luminance));
     color: var(--bg-color);
@@ -191,6 +208,10 @@ Therefore do it using a scuffed calc method
 
 .opacity-30 {
     opacity: 0.3;
+}
+
+.opacity-80 {
+    opacity: 0.8;
 }
 
 .blank-background {
@@ -208,6 +229,10 @@ Therefore do it using a scuffed calc method
     border-radius: 40px;   
 }
 
+.position-absolute {
+    position: absolute;
+}
+
 .nav-circle {
     clip-path: ellipse(35px 25px);
     width: 70px;
@@ -221,11 +246,16 @@ Therefore do it using a scuffed calc method
 }
 
 .first-nav-circle {
-    left: 70px;
-    top: -40px;
+    left: 90px;
+    top: -65px;
 }
 
 .second-nav-circle {
-    left: 45px;
-    top: -35px;
+    left: 70px;
+    top: -60px;
+}
+
+.third-nav-circle {
+    left: -5px;
+    top: -80px;
 }

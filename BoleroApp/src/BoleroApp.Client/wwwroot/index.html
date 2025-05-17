@@ -27,6 +27,48 @@
             const modeNum = mode ? 1 : 0;
             rootElem.style.setProperty("--dark-theme", modeNum);
         }
+
+        /**
+         * Saves a json file
+         */
+        function saveFile(fileString, fileName) {
+            console.log(fileString, fileName);
+            const blob = new Blob([fileString], { type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            
+            const fileElem = document.createElement("a");
+            fileElem.href = url;
+            fileElem.download = fileName;
+            
+            document.body.appendChild(fileElem);
+            fileElem.click();
+            document.body.removeChild(fileElem);
+
+            URL.revokeObjectURL(url);
+        }
+
+        /**
+         * Loads a json file
+         */
+        function loadFile() {
+            return new Promise((resolve, reject) => {
+                const inputElem = document.createElement("input");
+                inputElem.type = "file";
+                inputElem.accept = ".json";
+                inputElem.addEventListener("change", () => {
+                    if (inputElem.files.length === 1) {
+                        const file = inputElem.files[0];
+                        file.text()
+                            .then(fileString => resolve(fileString))
+                            .catch(error => reject());
+                    }
+                });
+                inputElem.addEventListener("cancel", () => {
+                    reject();
+                });
+                inputElem.click();
+            });
+        }
     </script>
 </body>
 </html>

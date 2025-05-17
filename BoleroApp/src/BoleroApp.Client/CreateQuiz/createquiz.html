@@ -1,14 +1,18 @@
 <div class="flex-column gap-10">
     <div>
         <span>Question:</span>
-        <input placeholder="Question" type="text" bind="${CurrentQuestion}" />
+        <input placeholder="Question" type="text" bind="${CurrentQuestion}" 
+            class="width-500" />
     </div>
     <div class="flex-row gap-10 flex-wrap">
         ${CurrentQuestionOptions}
         <template id="CurrentQuestionOption">
-            <div class="flex-column gap-10 align-start">
-                <input placeholder="Option" type="text" bind="${Option}" />
-                <button onclick="${DeleteOption}">Delete</button>
+            <div class="flex-column gap-10 ${OptionClass}">
+                <input class="${OptionObjectClass}" placeholder="Option" type="text" bind="${Option}" />
+                <span class="flex-row space-between">
+                    <button class="${OptionObjectClass}" onclick="${DeleteOption}">Delete</button>
+                    <button class="${OptionObjectClass}" onclick="${SetCorrect}">Set as correct</button>
+                </span>
             </div>
         </template>
         <button onclick="${AddOption}">Add option</button>
@@ -25,6 +29,7 @@
     <h3>Controls</h3>
     <div>
         <button onclick="${SaveQuizFile}">Save quiz to file</button>
+        <button onclick="${LoadQuizFile}">Load quiz from file</button>
         <button>Go to quiz</button>
     </div>
 </div>
@@ -40,7 +45,7 @@
                 <div class="flex-row gap-10 padding-5">
                     ${QuestionOptions}
                     <template id="QuestionOption">
-                        <span class="border-small padding-5">${Option}</span>
+                        <p class="border-small padding-5">${Option}</p>
                     </template>
                 </div>
                 <button onclick="${EditQuestion}">Edit</button>

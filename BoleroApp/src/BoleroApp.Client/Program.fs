@@ -87,7 +87,7 @@ let navBarView navbar dispatch =
             Html.div {
                 // make absolute so it doesn't take up space in element
                 // and move things about
-                Html.attr.``class`` "position-absolute"
+                Html.attr.``class`` "position-absolute z-index-1"
                 Html.a {
                     Html.attr.``class`` "nav-circle first-nav-circle"
                     Html.attr.href "/" 

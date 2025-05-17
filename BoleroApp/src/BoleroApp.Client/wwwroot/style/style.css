@@ -243,6 +243,14 @@ Therefore do it using a scuffed calc method
     position: absolute;
 }
 
+.z-index-1 {
+    z-index: 1;
+}
+
+/*
+Nav related stuff
+*/
+
 .nav-circle {
     clip-path: ellipse(35px 25px);
     width: 70px;
@@ -252,20 +260,37 @@ Therefore do it using a scuffed calc method
     align-content: center;
     background-color: var(--text-color);
     color: var(--bg-color);
-    position: relative;
+    position: absolute;
+
+    animation: fade-nav-in 0.5s ease-out forwards;
 }
 
 .first-nav-circle {
-    left: 90px;
-    top: -60px;
+    --left-pos: 75px;
+    --top-pos: -60px;
 }
 
 .second-nav-circle {
-    left: 65px;
-    top: -55px;
+    --left-pos: 70px;
+    --top-pos: -0px;
 }
 
 .third-nav-circle {
-    left: -5px;
-    top: -80px;
+    --left-pos: -5px;
+    --top-pos: 10px;
 }
+
+@keyframes fade-nav-in {
+    0% {
+        opacity: 0;
+        left: 0px;
+        top: -50px;
+    }
+
+    100% {
+        opacity: 100%;
+        left: var(--left-pos);
+        top: var(--top-pos);
+    }
+}
+

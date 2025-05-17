@@ -1,2 +1,0 @@
-To run
-```dotnet run```

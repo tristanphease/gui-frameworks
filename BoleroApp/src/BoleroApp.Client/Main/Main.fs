@@ -18,8 +18,11 @@ let update (message: MainMessage) (model: MainModel) =
 let title : string =
     "Main Page"
 
+type MainTemplate = Template<"Main/main.html">
+
 let view (model: MainModel) (dispatch: Dispatch<MainMessage>) =
-    Node.Text "This is the main page!"
+    MainTemplate()
+        .Elt()
 
 let initModel = MainModel()
 

@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
-  <ItemGroup><Compile Include="Util.fs" /><Compile Include="Quiz.fs" /><Compile Include="File.fs" /><Compile Include="ViewQuiz\ViewQuiz.fs" /><Compile Include="CreateQuiz\CreateQuiz.fs" /><Compile Include="Theme.fs" />
-    <Compile Include="Main.fs" /><Compile Include="Program.fs" />
+  <ItemGroup><Compile Include="Util.fs" /><Compile Include="Quiz.fs" /><Compile Include="File.fs" /><Compile Include="ViewQuiz\ViewQuiz.fs" /><Compile Include="CreateQuiz\CreateQuiz.fs" /><Compile Include="Main\Main.fs" /><Compile Include="Theme.fs" />
+    <Compile Include="Program.fs" />
     <Compile Include="Startup.fs" />
   </ItemGroup>
   <ItemGroup>

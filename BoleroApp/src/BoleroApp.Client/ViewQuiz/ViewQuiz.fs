@@ -19,12 +19,14 @@ type QuizInfo =
     | QuizLoaded of quiz: QuizQuestionWithAnswer list
     | QuizCompleted of quiz: QuizQuestionWithAnswer list
 
+/// Model for the view quiz page
 type Model = 
     {
         quizInfo: QuizInfo;
         errorMessage: string option;
     }
 
+/// Message for updating the view quiz page
 type Message = 
     | LoadQuizFile 
     | CompleteQuiz
@@ -88,15 +90,16 @@ let viewQuizOptions (dispatch: Dispatch<Message>) (questionIndex: int) (optionIn
         .QuestionIndex(questionIndex.ToString())
         .OptionIndex(optionIndex.ToString())
         .RadioSelected(fun _ -> dispatch (SelectOption (questionIndex, optionIndex)))
+        .OptionDisabled(false)
         .Elt()
 
 let viewQuizQuestions (dispatch: Dispatch<Message>) (questionIndex: int, quizQuestion: QuizQuestionWithAnswer) =
     ViewQuiz.Question()
+        .QuizQuestion(quizQuestion.question)
         .QuestionOptions(
             viewQuizOptions dispatch questionIndex
                 |> Html.forEach (List.indexed quizQuestion.options)
         )
-        .QuizQuestion(quizQuestion.question)
         .Elt()
 
 let correctClass = "correct-background"
@@ -114,18 +117,21 @@ let questionOptionClass isAnswer isCorrect =
 
 
 let viewQuizQuestionWithAnswer (answerIndex: int option) (correctIndex: int) (optionIndex, optionName: string)  =
-    ViewQuiz.QuestionOptionWithAnswer()
+    ViewQuiz.QuestionOption()
         .OptionName(optionName)
         .QuestionOptionClass(questionOptionClass (Util.isEqual optionIndex answerIndex) (optionIndex = correctIndex) )
+        .OptionChecked(Util.isEqual optionIndex answerIndex)
+        .OptionDisabled(true)
         .Elt()
 
 
-let viewQuizQuestionsWithAnswers (quizQuestion: QuizQuestionWithAnswer) =
-    ViewQuiz.QuestionWithAnswerTemplate()
-        .QuestionOptionWithAnswer(
+let viewQuizQuestionsWithAnswers (questionIndex: int, quizQuestion: QuizQuestionWithAnswer) =
+    ViewQuiz.Question()
+        .QuizQuestion(quizQuestion.question)
+        .QuestionOptions(
             viewQuizQuestionWithAnswer quizQuestion.answerGiven quizQuestion.correctAnswer
-                |> Html.forEach (List.indexed quizQuestion.options)
-        )
+                |> Html.forEach (List.indexed quizQuestion.options) 
+        ) 
         .Elt()
 
 let isCorrectAnswerQuestion quizQuestion = 
@@ -136,6 +142,14 @@ let calculateCorrectScore (quizQuestions: QuizQuestionWithAnswer list) =
         |> List.filter isCorrectAnswerQuestion
         |> List.length
 
+let viewQuizCompleteHeader quiz =
+    ViewQuiz.QuizComplete()
+        .CorrectScore(
+            (calculateCorrectScore quiz).ToString()
+        )
+        .MaxScore((List.length quiz).ToString())
+        .Elt()
+
 let viewQuiz (dispatch: Dispatch<Message>) (quizInfo: QuizInfo) : Node =
     match quizInfo with 
         | QuizNotLoaded -> 
@@ -143,18 +157,19 @@ let viewQuiz (dispatch: Dispatch<Message>) (quizInfo: QuizInfo) : Node =
                 .Elt()
         | QuizLoaded quiz -> 
             ViewQuiz.QuizViewTemplate()
+                .QuizResults(String.Empty)
                 .QuizQuestions(Html.forEach (List.indexed quiz) (viewQuizQuestions dispatch))
                 .CompleteQuiz(fun _ -> dispatch CompleteQuiz)
+                .CompleteQuizButtonClass(String.Empty)
                 .Elt()         
         | QuizCompleted quiz -> 
-            ViewQuiz.QuizCompletedTemplate()
-                .QuestionWithAnswer(Html.forEach quiz viewQuizQuestionsWithAnswers)
-                .CorrectScore(
-                    (calculateCorrectScore quiz).ToString()
-                )
-                .MaxScore((List.length quiz).ToString())
+            ViewQuiz.QuizViewTemplate()
+                .QuizResults(viewQuizCompleteHeader quiz)
+                .QuizQuestions(Html.forEach (List.indexed quiz) viewQuizQuestionsWithAnswers)
+                .CompleteQuizButtonClass("display-none")
                 .Elt()
 
+/// View for the view quiz page
 let view (model: Model) (dispatch: Dispatch<Message>) : Node =
     ViewQuiz()
         .LoadQuizFile(fun _ -> dispatch LoadQuizFile)

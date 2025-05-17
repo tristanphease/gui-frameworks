@@ -152,13 +152,18 @@ let viewExistingQuestion (dispatch: Dispatch<Message>) (index: int, quizQuestion
         .DeleteQuestion(fun _ -> dispatch (DeleteExistingQuestion index))
         .Elt()
 
+let viewAllExistingQuestions dispatch questions = 
+    if List.isEmpty questions 
+    then Node.Text "No questions"
+    else Html.forEach (List.indexed questions) (viewExistingQuestion dispatch)
+
 let view (model: Model) (dispatch: Dispatch<Message>) : Node =
     CreateQuiz()
         .CurrentQuestion(model.currentQuestion.question, fun n -> dispatch (SetCurrentQuestion n))
         .CurrentQuestionOptions(Html.forEach (List.indexed model.currentQuestion.options) (viewCurrentQuestionOption dispatch model.currentQuestion.correctAnswer))
         .AddCurrentQuestion(fun _ -> dispatch AddCurrentQuestion)
         .AddOption(fun _ -> dispatch AddOption)
-        .ExistingQuestions(Html.forEach (List.indexed model.questions) (viewExistingQuestion dispatch))
+        .ExistingQuestions(viewAllExistingQuestions dispatch model.questions)
         .ErrorMessage(Option.defaultValue String.Empty model.errorMessage)
         .ErrorMessageClass(if model.errorMessage.IsSome then String.Empty else "hidden")
         .SaveQuizFile(fun _ -> dispatch SaveQuizFile)

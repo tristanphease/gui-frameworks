@@ -1,5 +1,5 @@
 <div>
-    <div id="quiz-controls">
+    <div id="quiz-controls" class="width-500 border-small margin-bottom-5 padding-5">
         <h3>Controls</h3>
         <div>
             <button onclick="${LoadQuizFile}">Load quiz from file</button>
@@ -8,7 +8,6 @@
 
 
     ${QuizView}
-
     <template id="QuizNotLoadedTemplate">
         <div>
             Quiz not loaded
@@ -16,6 +15,7 @@
     </template>
 
     <template id="QuizViewTemplate">
+
         ${QuizQuestions}
         <template id="Question">
 
@@ -23,43 +23,33 @@
                 ${QuizQuestion}
             </span>
 
-            ${QuestionOptions}
-            
-            
-            <template id="QuestionOption">
-                <div>
-                    <input type="radio" id="question-${QuestionIndex}-${OptionIndex}" 
-                        name="question-${QuestionIndex}" onchange="${RadioSelected}"  />
-                    <label for="question-${QuestionIndex}-${OptionIndex}">${OptionName}</label>
-                </div>
-            </template>
-        </template>
-
-        <button onclick="${CompleteQuiz}">Complete Quiz</button>
-    </template>
-
-    <template id="QuizCompletedTemplate">
-        <div>
-            Completed Quiz!
-        </div>
-        <div>
-            Scored ${CorrectScore}/${MaxScore}!
-        </div>
-
-        ${QuestionWithAnswer}
-        <template id="QuestionWithAnswerTemplate">
-            <div>
-                ${QuestionOptionWithAnswer}
-                <template id="QuestionOptionWithAnswer">
-                    <div>
-                        <p class="${QuestionOptionClass}">
-                            ${OptionName}
-                        </p>
+            <div class="width-500 border-small margin-bottom-5">
+                ${QuestionOptions}
+                <template id="QuestionOption">
+                    <div class="${QuestionOptionClass}">
+                        <input type="radio" id="question-${QuestionIndex}-${OptionIndex}" 
+                            name="question-${QuestionIndex}" onchange="${RadioSelected}" 
+                            checked=${OptionChecked} disabled="${OptionDisabled}" />
+                        <label for="question-${QuestionIndex}-${OptionIndex}">${OptionName}</label>
                     </div>
                 </template>
             </div>
+            
+        </template>
+
+        <button class="${CompleteQuizButtonClass}" onclick="${CompleteQuiz}">Complete Quiz</button>
+
+        ${QuizResults}
+        <template id="QuizComplete">
+            <div class="width-500 border-small margin-bottom-5">
+                <div>
+                    Completed Quiz!
+                </div>
+                <div>
+                    Scored ${CorrectScore}/${MaxScore}!
+                </div>
+            </div>
         </template>
     </template>
-    
 </div>
 

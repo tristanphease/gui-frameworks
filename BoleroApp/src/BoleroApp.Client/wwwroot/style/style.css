@@ -58,6 +58,7 @@ Therefore do it using a scuffed calc method
         --bg-luminance: 90%;
         --text-luminance: 10%;
         --error-luminance: 30%;
+        --correct-luminance: 30%;
     }
 }
 
@@ -70,6 +71,7 @@ Therefore do it using a scuffed calc method
         --bg-luminance: 10%;
         --text-luminance: 90%;
         --error-luminance: 70%;
+        --correct-luminance: 70%;
     }
 
 } */
@@ -184,6 +186,14 @@ Therefore do it using a scuffed calc method
 
 .padding-5 {
     padding: 5px;
+}
+
+.margin-bottom-5 {
+    margin-bottom: 5px;
+}
+
+.display-none {
+    display: none;
 }
 
 .icon {

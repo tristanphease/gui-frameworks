@@ -3,8 +3,12 @@
         "dev": {
             "command": "deno run -A npm:elm-watch@beta hot"
         },
+        "setup-env": {
+            "command": "deno --allow-env --allow-write setup-env.ts"
+        },
         "build": {
-            "command": "elm make src/Main.elm --output=build/main.js"
+            "command": "elm make src/Main.elm --output=build/main.js",
+            "dependencies": ["setup-env"]
         }
     }
 }

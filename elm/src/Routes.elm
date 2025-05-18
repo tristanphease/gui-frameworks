@@ -2,7 +2,7 @@ module Routes exposing (..)
 
 import Url exposing (Url)
 import Url.Parser exposing (..)
-
+import Environment exposing (..)
 
 type Route
   = NotFound
@@ -25,18 +25,25 @@ parseUrl url =
     Nothing ->
       NotFound
 
-
-matchRoute : Parser (Route -> a) a
-matchRoute =
+mainMatchParser : Parser (Route -> c) c
+mainMatchParser = 
   oneOf
     [ 
       map Main top, 
       map Quote (s "quotes")
     ]
 
+matchRoute : Parser (Route -> a) a
+matchRoute =
+  if String.isEmpty Environment.basePath then mainMatchParser else s Environment.basePath </> mainMatchParser
+
+envPathBase : String
+envPathBase =
+  if String.isEmpty Environment.basePath then "" else "/" ++ Environment.basePath
+
 pathFor : Route -> String
 pathFor route =
-  case route of
+  envPathBase ++ case route of
     Quote -> "/quotes"
     NotFound -> "/404"
     Main -> "/"

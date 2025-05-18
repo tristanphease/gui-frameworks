@@ -59,6 +59,8 @@ jobs:
         with:
           elm-version: 0.19.1
       - name: Run elm build
+        env: 
+          BASE_PATH: 'elm'
         run: deno task build
         working-directory: elm
       - name: Copy elm output

@@ -48,6 +48,8 @@ jobs:
         run: npm install
         working-directory: svelte
       - name: Run svelte build
+        env: 
+          BASE_PATH: '/${{ github.event.repository.name }}/svelte'
         run: deno task build
         working-directory: svelte
       - name: Copy svelte output

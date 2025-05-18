@@ -1,10 +1,10 @@
 <script lang="ts">
     import { linear } from "svelte/easing";
-
+    import { base } from "$app/paths";
 
     type MenuItem = { url: string, name: string, description: string }; 
     const menuItems: MenuItem[] = [
-        { url: ".", name: "Home", description: "The home page" },
+        { url: "", name: "Home", description: "The home page" },
         { url: "mathml", name: "MathML", description: "A short dissertation on the Maths Markup Language for the web."},
     ];
 
@@ -34,7 +34,7 @@
 {#if menuOpened}
     <div id="menu-item-collection" style="transform-origin: top;" transition:squash={{ duration: 200 }}>
     {#each menuItems as menuItem}
-        <a class="menu-item" href="/{menuItem.url}">
+        <a class="menu-item" href="{base}/{menuItem.url}">
             <span class="menu-item-name">{menuItem.name}</span>
             <p class="menu-item-description">{menuItem.description}</p>
         </a>

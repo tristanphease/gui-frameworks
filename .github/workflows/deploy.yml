@@ -1,0 +1,64 @@
+# .github/workflows/deploy.yml
+
+name: Deploy 
+
+on:
+  push:
+    branches:
+      - main
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Deploy job
+  deploy:
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Deployment step
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v4
+      - name: Setup dir
+        run: mkdir -p build
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Run svelte build
+        run: deno task build
+        working-directory: svelte
+      - name: Copy svelte output
+        run: cp -r ./svelte/build ./build && mv ./build/build ./build/svelte
+      - name: Run elm build
+        run: deno task build
+        working-directory: elm
+      - name: Copy elm output
+        run: cp -r ./elm ./build
+      # - name: Run iced build
+      #   run: trunk build --release --public-url "${GITHUB_REPOSITORY#*/}"
+      #   working-directory: iced
+      # Add bolero build next
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # upload build folder
+          path: './build'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4 

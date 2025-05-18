@@ -38,11 +38,24 @@ jobs:
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - name: Install deno depedencies
+        # Using npm install because threlte is annoying
+        # https://github.com/threlte/threlte/issues/1453
+        run: npm install
+        working-directory: svelte
       - name: Run svelte build
         run: deno task build
         working-directory: svelte
       - name: Copy svelte output
         run: cp -r ./svelte/build ./build && mv ./build/build ./build/svelte
+      - name: Setup elm
+        uses: jorelali/setup-elm@v6
+        with:
+          elm-version: 0.19.1
       - name: Run elm build
         run: deno task build
         working-directory: elm

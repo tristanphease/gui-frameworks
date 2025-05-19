@@ -7,7 +7,7 @@
             "command": "deno --allow-env --allow-write setup-env.ts"
         },
         "build": {
-            "command": "elm make src/Main.elm --output=build/main.js",
+            "command": "elm make src/Main.elm --output=build/main.js --optimize",
             "dependencies": ["setup-env"]
         }
     }

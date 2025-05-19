@@ -33,9 +33,15 @@ mainMatchParser =
       map Quote (s "quotes")
     ]
 
+baseParser : Parser a a
+baseParser =
+  String.split "/" Environment.basePath
+    |> List.map s 
+    |> List.foldr (</>) top
+
 matchRoute : Parser (Route -> a) a
 matchRoute =
-  if String.isEmpty Environment.basePath then mainMatchParser else s Environment.basePath </> mainMatchParser
+  if String.isEmpty Environment.basePath then mainMatchParser else baseParser </> mainMatchParser
 
 envPathBase : String
 envPathBase =

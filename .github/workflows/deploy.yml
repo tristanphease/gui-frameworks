@@ -88,16 +88,18 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
+      - name: Setup wasm-tools
+        run: dotnet workload install wasm-tools
       - name: Setup bolero env
         env:
           BASE_PATH: '${{ github.event.repository.name }}/bolero'
         run: deno task setup-env
         working-directory: BoleroApp
       - name: Run bolero build
-        run: dotnet publish src/BoleroApp.Client/BoleroApp.Client.fsproj -o bolero
+        run: dotnet publish src/BoleroApp.Client/BoleroApp.Client.fsproj -o build
         working-directory: BoleroApp
       - name: Copy bolero output over
-        run: cp -r ./bolero/build/wwwroot ./build && mv ./build/wwwroot ./build/bolero
+        run: cp -r ./BoleroApp/build/wwwroot ./build && mv ./build/wwwroot ./build/bolero
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

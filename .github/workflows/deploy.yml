@@ -94,7 +94,7 @@ jobs:
         run: deno task setup-env
         working-directory: BoleroApp
       - name: Run bolero build
-        run: dotnet publish src\BoleroApp.Client\BoleroApp.Client.fsproj -o bolero
+        run: dotnet publish src/BoleroApp.Client/BoleroApp.Client.fsproj -o bolero
         working-directory: BoleroApp
       - name: Copy bolero output over
         run: cp -r ./bolero/build/wwwroot ./build && mv ./build/wwwroot ./build/bolero

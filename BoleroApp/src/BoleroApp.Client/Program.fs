@@ -7,14 +7,17 @@ open Microsoft.AspNetCore.Components
 open Microsoft.JSInterop
 
 type Page = 
-    | [<EndPoint "/">] Main of PageModel<Main.MainModel>
-    | [<EndPoint "/createquiz">] CreateQuiz of PageModel<CreateQuiz.Model>
-    | [<EndPoint "/viewquiz">] ViewQuiz of PageModel<ViewQuiz.Model>
+    | [<EndPoint "/">] Main
+    | [<EndPoint "/createquiz">] CreateQuiz
+    | [<EndPoint "/viewquiz">] ViewQuiz
 
 // model
 type Model = 
     {
         page: Page;
+        mainModel: Main.MainModel;
+        createQuizModel: CreateQuiz.Model;
+        viewQuizModel: ViewQuiz.Model;
         navbar: bool;
         themeModel: Theme.Model;
     }
@@ -34,35 +37,29 @@ let update (jsRuntime: IJSRuntime) (message: Message) (model: Model) =
             { model with page = page }, Cmd.none        
         | Main mainMessage -> 
             match model.page with 
-                | Page.Main mainModel -> 
-                    let newMainModel, mainCmd = Main.update mainMessage mainModel.Model
-                    { model with page = Page.Main { Model = newMainModel }}, Cmd.map Main mainCmd
+                | Page.Main -> 
+                    let newMainModel, mainCmd = Main.update mainMessage model.mainModel
+                    { model with mainModel = newMainModel }, Cmd.map Main mainCmd
                 | _ -> model, Cmd.none
         | CreateQuiz createQuizMessage ->
             match model.page with 
-                | Page.CreateQuiz quizModel ->
-                    let newQuizModel, quizCmd = CreateQuiz.update jsRuntime createQuizMessage quizModel.Model
-                    { model with page = Page.CreateQuiz { Model = newQuizModel }}, Cmd.map CreateQuiz quizCmd
+                | Page.CreateQuiz ->
+                    let newQuizModel, quizCmd = CreateQuiz.update jsRuntime createQuizMessage model.createQuizModel
+                    { model with createQuizModel = newQuizModel }, Cmd.map CreateQuiz quizCmd
                 | _ -> model, Cmd.none
         | ViewQuiz viewQuizMessage ->
             match model.page with 
-                | Page.ViewQuiz quizModel ->
-                    let newViewQuizModel, quizCmd = ViewQuiz.update jsRuntime viewQuizMessage quizModel.Model
-                    { model with page = Page.ViewQuiz { Model = newViewQuizModel }}, Cmd.map ViewQuiz quizCmd
+                | Page.ViewQuiz ->
+                    let newViewQuizModel, quizCmd = ViewQuiz.update jsRuntime viewQuizMessage model.viewQuizModel
+                    { model with viewQuizModel = newViewQuizModel }, Cmd.map ViewQuiz quizCmd
                 | _ -> model, Cmd.none
         | ThemeMessage themeMessage -> 
             let newThemeModel, themeCmd = Theme.update jsRuntime themeMessage model.themeModel
             { model with themeModel = newThemeModel }, Cmd.map ThemeMessage themeCmd
         | ToggleNavBar -> { model with navbar = not model.navbar }, Cmd.none
 
-let defaultModel page = 
-    match page with
-        | Page.Main model -> Router.definePageModel model Main.initModel        
-        | Page.CreateQuiz model -> Router.definePageModel model CreateQuiz.initModel        
-        | Page.ViewQuiz model -> Router.definePageModel model ViewQuiz.initModel
-
 // routing system
-let router = Router.inferWithModel SetPage (fun model -> model.page) defaultModel
+let router = Router.infer SetPage (fun model -> model.page)
 
 type Program = Template<"wwwroot/program.html">
 
@@ -71,9 +68,9 @@ let themeElementView (programModel: Model) (dispatch: Dispatch<Message>) : Node 
 
 let pageTitle page : string =
     match page with
-        | Page.Main _ -> Main.title
-        | Page.CreateQuiz _ -> CreateQuiz.title
-        | Page.ViewQuiz _ -> ViewQuiz.title
+        | Page.Main -> Main.title
+        | Page.CreateQuiz -> CreateQuiz.title
+        | Page.ViewQuiz -> ViewQuiz.title
 
 let navBarView navbar dispatch =
     Html.div {
@@ -90,17 +87,17 @@ let navBarView navbar dispatch =
                 Html.attr.``class`` "position-absolute z-index-1"
                 Html.a {
                     Html.attr.``class`` "nav-circle first-nav-circle"
-                    Html.attr.href "/" 
+                    Html.attr.href (router.Link Page.Main )
                     Html.text "Main Page"
                 }
                 Html.a {
                     Html.attr.``class`` "nav-circle second-nav-circle"
-                    Html.attr.href "/createquiz"
+                    Html.attr.href (router.Link Page.CreateQuiz )
                     Html.text "Create a Quiz"
                 }
                 Html.a {
                     Html.attr.``class`` "nav-circle third-nav-circle"
-                    Html.attr.href "/viewquiz"
+                    Html.attr.href (router.Link Page.ViewQuiz )
                     Html.text "View a Quiz"
                 }
             }
@@ -115,9 +112,9 @@ let view (model: Model) (dispatch: Dispatch<Message>) =
             )
             .Body(
                 Html.cond model.page <| function
-                    | Page.Main x -> Main.view x.Model (dispatch << Message.Main)                
-                    | Page.CreateQuiz x -> CreateQuiz.view x.Model (dispatch << Message.CreateQuiz)                    
-                    | Page.ViewQuiz x -> ViewQuiz.view x.Model (dispatch << Message.ViewQuiz)
+                    | Page.Main -> Main.view model.mainModel (dispatch << Message.Main)                
+                    | Page.CreateQuiz -> CreateQuiz.view model.createQuizModel (dispatch << Message.CreateQuiz)                    
+                    | Page.ViewQuiz -> ViewQuiz.view model.viewQuizModel (dispatch << Message.ViewQuiz)
             )
             .Title(pageTitle model.page)
             .Theme(
@@ -131,7 +128,10 @@ let view (model: Model) (dispatch: Dispatch<Message>) =
 
 let init _ =
     {
-        page = Page.Main { Model = Main.initModel };
+        page = Page.Main;
+        mainModel = Main.initModel;
+        createQuizModel = CreateQuiz.initModel;
+        viewQuizModel = ViewQuiz.initModel;
         navbar = false;
         themeModel = Theme.initModel
     },

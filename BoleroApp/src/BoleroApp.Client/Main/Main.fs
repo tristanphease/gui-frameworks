@@ -24,7 +24,8 @@ let view (model: MainModel) (dispatch: Dispatch<MainMessage>) =
     MainTemplate()
         .Elt()
 
-let initModel = MainModel()
+let initModel = 
+    MainModel()
 
 let init _ =
     initModel,

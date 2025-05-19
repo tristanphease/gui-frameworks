@@ -42,6 +42,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
+
       - name: Install deno depedencies
         # Using npm install because threlte is annoying
         # https://github.com/threlte/threlte/issues/1453
@@ -54,21 +55,43 @@ jobs:
         working-directory: svelte
       - name: Copy svelte output
         run: cp -r ./svelte/build ./build && mv ./build/build ./build/svelte
+
       - name: Setup elm
         uses: jorelali/setup-elm@v6
         with:
           elm-version: 0.19.1
       - name: Run elm build
         env: 
-          BASE_PATH: 'elm'
+          BASE_PATH: '${{ github.event.repository.name }}/elm'
         run: deno task build
         working-directory: elm
       - name: Copy elm output
         run: cp -r ./elm ./build
-      # - name: Run iced build
-      #   run: trunk build --release --public-url "${GITHUB_REPOSITORY#*/}"
-      #   working-directory: iced
-      # Add bolero build next
+
+      - name: Setup Trunk
+        uses: jetli/trunk-action@v0.5.0
+        with:
+          version: 'latest'
+      - name: Run iced build
+        run: trunk build --release
+        working-directory: iced
+      - name: Copy iced output
+        run: cp -r ./iced/dist ./build && mv ./build/dist ./build/iced
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - name: Setup bolero env
+        env:
+          BASE_PATH: '${{ github.event.repository.name }}/bolero'
+        run: deno task setup-env
+      - name: Run bolero build
+        run: dotnet publish src\BoleroApp.Client\BoleroApp.Client.fsproj -o bolero
+        working-directory: BoleroApp
+      - name: Copy bolero output over
+        run: cp -r ./bolero/build/wwwroot ./build && mv ./build/wwwroot ./build/bolero
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

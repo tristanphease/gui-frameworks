@@ -79,7 +79,7 @@ jobs:
         with:
           version: 'latest'
       - name: Run iced build
-        run: trunk build --release --public-url "${{ github.event.repository.name }}/iced"
+        run: trunk build --release --public-url "/${{ github.event.repository.name }}/iced"
         working-directory: iced
       - name: Copy iced output
         run: cp -r ./iced/dist ./build && mv ./build/dist ./build/iced

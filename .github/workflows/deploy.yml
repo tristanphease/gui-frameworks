@@ -79,7 +79,7 @@ jobs:
         with:
           version: 'latest'
       - name: Run iced build
-        run: trunk build --release
+        run: trunk build --release --public-url "${{ github.event.repository.name }}/iced"
         working-directory: iced
       - name: Copy iced output
         run: cp -r ./iced/dist ./build && mv ./build/dist ./build/iced
@@ -92,7 +92,7 @@ jobs:
         run: dotnet workload install wasm-tools
       - name: Setup bolero env
         env:
-          BASE_PATH: '${{ github.event.repository.name }}/bolero'
+          BASE_PATH: '${{ github.event.repository.name }}/bolero/'
         run: deno task setup-env
         working-directory: BoleroApp
       - name: Run bolero build
